@@ -205,7 +205,7 @@ const useInstanceAfterState: UseInstanceAfterState = instance => {
   )
 
   instance.getColumnSortedIndex = React.useCallback(
-    columnId => instance.state.sorting.findIndex(d => d.id === columnId),
+    columnId => instance.state.sorting?.findIndex(d => d.id === columnId) ?? -1,
     [instance]
   )
 
@@ -216,12 +216,12 @@ const useInstanceAfterState: UseInstanceAfterState = instance => {
 
   instance.getColumnIsSortedDesc = React.useCallback(
     columnId =>
-      instance.state.sorting.find(d => d.id === columnId)?.desc ?? false,
+      instance.state.sorting?.find(d => d.id === columnId)?.desc ?? false,
     [instance]
   )
 
   instance.clearColumnSorting = React.useCallback(
-    columnId => instance.setSorting(old => old.filter(d => d.id !== columnId)),
+    columnId => instance.setSorting(old => old?.filter(d => d.id !== columnId)),
     [instance]
   )
 
@@ -238,7 +238,7 @@ const useInstanceAfterDataModel: UseInstanceAfterDataModel = instance => {
   } = instance
 
   const [sortedRows, sortedFlatRows] = React.useMemo(() => {
-    if (manualSorting || !sorting.length) {
+    if (manualSorting || !sorting?.length) {
       return [rows, flatRows]
     }
 
@@ -271,10 +271,17 @@ const useInstanceAfterDataModel: UseInstanceAfterDataModel = instance => {
 
           const { sortType } = column
 
-          const sortFn: SortFn =
-            isFunction(sortType) ||
-            (instance.options.sortTypes || {})[sortType as string] ||
-            sortTypes[sortType as string]
+          if (!sortType) {
+            throw new Error(
+              process.env.NODE_ENV !== 'production'
+                ? `React-Table: Expected a sortType for column '${sort.id}' but was not provided.`
+                : ''
+            )
+          }
+
+          const sortFn: SortFn = isFunction(sortType)
+            ? sortType
+            : instance.options.sortTypes?.[sortType] || sortTypes[sortType]
 
           if (!sortFn) {
             throw new Error(

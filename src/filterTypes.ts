@@ -1,4 +1,6 @@
-export const text = (rows, ids, filterValue) => {
+import { FilterFn } from './types'
+
+export const text: FilterFn = (rows, ids, filterValue) => {
   rows = rows.filter(row => {
     return ids.some(id => {
       const rowValue = row.values[id]
@@ -12,7 +14,7 @@ export const text = (rows, ids, filterValue) => {
 
 text.autoRemove = val => !val
 
-export const exactText = (rows, ids, filterValue) => {
+export const exactText: FilterFn = (rows, ids, filterValue) => {
   return rows.filter(row => {
     return ids.some(id => {
       const rowValue = row.values[id]
@@ -25,7 +27,7 @@ export const exactText = (rows, ids, filterValue) => {
 
 exactText.autoRemove = val => !val
 
-export const exactTextCase = (rows, ids, filterValue) => {
+export const exactTextCase: FilterFn = (rows, ids, filterValue) => {
   return rows.filter(row => {
     return ids.some(id => {
       const rowValue = row.values[id]
@@ -38,7 +40,7 @@ export const exactTextCase = (rows, ids, filterValue) => {
 
 exactTextCase.autoRemove = val => !val
 
-export const includes = (rows, ids, filterValue) => {
+export const includes: FilterFn = (rows, ids, filterValue) => {
   return rows.filter(row => {
     return ids.some(id => {
       const rowValue = row.values[id]
@@ -49,7 +51,7 @@ export const includes = (rows, ids, filterValue) => {
 
 includes.autoRemove = val => !val || !val.length
 
-export const includesAll = (rows, ids, filterValue) => {
+export const includesAll: FilterFn = (rows, ids, filterValue: any[]) => {
   return rows.filter(row => {
     return ids.some(id => {
       const rowValue = row.values[id]
@@ -64,7 +66,7 @@ export const includesAll = (rows, ids, filterValue) => {
 
 includesAll.autoRemove = val => !val || !val.length
 
-export const exact = (rows, ids, filterValue) => {
+export const exact: FilterFn = (rows, ids, filterValue) => {
   return rows.filter(row => {
     return ids.some(id => {
       const rowValue = row.values[id]
@@ -75,7 +77,7 @@ export const exact = (rows, ids, filterValue) => {
 
 exact.autoRemove = val => typeof val === 'undefined'
 
-export const equals = (rows, ids, filterValue) => {
+export const equals: FilterFn = (rows, ids, filterValue) => {
   return rows.filter(row => {
     return ids.some(id => {
       const rowValue = row.values[id]
@@ -87,7 +89,7 @@ export const equals = (rows, ids, filterValue) => {
 
 equals.autoRemove = val => val == null
 
-export const between = (rows, ids, filterValue) => {
+export const between: FilterFn = (rows, ids, filterValue) => {
   let [min, max] = filterValue || []
 
   min = typeof min === 'number' ? min : -Infinity

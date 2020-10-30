@@ -1,5 +1,12 @@
 import React from 'react'
-import { TableColumn, RendererMeta, TableInstance, SortFn } from './types'
+import {
+  TableColumn,
+  RendererMeta,
+  TableInstance,
+  SortFn,
+  FromUpdater,
+  FilterFn,
+} from './types'
 
 export function composeDecorator(fns) {
   return (initial, meta) => fns.forEach(fn => fn(initial, meta), initial)
@@ -10,8 +17,12 @@ export function composeReducer(fns) {
     fns.reduce((reduced, fn) => fn(reduced, meta), initial)
 }
 
-export function functionalUpdate(updater, old) {
-  return typeof updater === 'function' ? updater(old) : updater
+export function functionalUpdate<T>(updater?: any, old?: T): T {
+  if (typeof updater === 'function') {
+    return updater(old)
+  }
+
+  return updater
 }
 
 export function noop() {
@@ -114,10 +125,8 @@ export function getFirstDefined<T extends any>(...args: T[]): T | undefined {
   }
 }
 
-export function isFunction(a) {
-  if (typeof a === 'function') {
-    return a
-  }
+export function isFunction(a: any): a is (...any: any[]) => any {
+  return typeof a === 'function'
 }
 
 export function flattenBy<T extends any[], U>(
@@ -166,8 +175,13 @@ export function expandRows(rows, instance) {
   return expandedRows
 }
 
-export function getFilterMethod(filter, userFilterTypes, filterTypes) {
-  return isFunction(filter) || userFilterTypes[filter] || filterTypes[filter]
+export function getFilterMethod<
+  T extends string | FilterFn | undefined,
+  U extends { [key: string]: T }
+>(filter: T, userFilterTypes: U, filterTypes: U) {
+  return isFunction(filter)
+    ? filter
+    : userFilterTypes[filter as string] || filterTypes[filter as string]
 }
 
 export function shouldAutoRemoveFilter(autoRemove, value, column) {

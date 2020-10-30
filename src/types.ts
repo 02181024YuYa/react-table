@@ -9,16 +9,25 @@ export interface TableInstance {
   reset: () => void
   getColumnWidth: (id?: Id) => number
   getTotalWidth: () => number
-  getTableHeadProps: (userProps: any) => TableHeadProps
-  getTableFooterProps: (userProps: any) => TableFooterProps
-  getTableBodyProps: (userProps: any) => TableBodyProps
-  getTableProps: (userProps: any) => TableProps
+  getTableHeadProps: (userProps?: any) => TableHeadProps
+  getTableFooterProps: (userProps?: any) => TableFooterProps
+  getTableBodyProps: (userProps?: any) => TableBodyProps
+  getTableProps: (userProps?: any) => TableProps
   headerGroups: HeaderGroup[]
   footerGroups: FooterGroup[]
   flatHeaders: Header[]
   flatFooters: Footer[]
   rows: Row[]
   flatRows: Row[]
+
+  // withColumnFilters
+  setColumnFilters: (updater: Updater<TableState['columnFilters']>) => void
+  resetColumnFilters: () => void
+  getColumnCanFilter: (columnId?: Id) => boolean
+  getColumnIsFiltered: (columnId?: Id) => boolean
+  getColumnFilterValue: (columnId?: Id) => any
+  getColumnFilterIndex: (columnId?: Id) => number
+  setColumnFilterValue: (columnId?: Id, value?: any) => void
 
   // withSorting
   setSorting: (updater: Updater<TableState['sorting']>) => void
@@ -31,9 +40,14 @@ export interface TableInstance {
   clearColumnSorting: (columnId?: Id) => void
 }
 
-type Id = string | number
+export type Id = string | number
 
-type Updater<T> = T | ((old: T) => T)
+export type Updater<T> = T | ((old: T) => T)
+export type FromUpdater<T extends (...any: any[]) => any> = T extends (
+  old: infer U
+) => any
+  ? U
+  : T
 
 export interface TableOptions {
   data: unknown[]
@@ -52,15 +66,27 @@ export interface TableOptions {
   filterFromChildrenUp?: boolean
   paginateExpandedRows?: boolean
 
+  // withColumnFilters
+
+  onColumnFiltersChange?: (
+    updater: Updater<TableState['columnFilters']>,
+    instance: TableInstance
+  ) => void
+  filterTypes?: Record<string, FilterFn>
+  manualColumnFilters?: boolean
+  autoResetColumnFilters?: boolean
+  disableFilters?: boolean
+  disableColumnFilters?: boolean
+
   // withSorting
-  sortTypes?: Record<string, SortFn>
-  manualSorting?: boolean
-  autoResetSorting?: boolean
-  isMultiSortEvent?: (event: any) => boolean
   onSortingChange?: (
     updater: Updater<TableState['sorting']>,
     instance: TableInstance
   ) => void
+  sortTypes?: Record<string, SortFn>
+  manualSorting?: boolean
+  autoResetSorting?: boolean
+  isMultiSortEvent?: (event: any) => boolean
   disableMultiSort?: boolean
   disableSortRemove?: boolean
   disableMultiRemove?: boolean
@@ -70,6 +96,7 @@ export interface TableOptions {
 
 export interface TableState {
   sorting?: SortObj[]
+  columnFilters?: ColumnFilter[]
 }
 
 export interface SortObj {
@@ -80,7 +107,7 @@ export interface SortObj {
 export interface Row<T = any> {
   id: Id
   subRows: Row[]
-  getRowProps: (userProps: any) => RowProps
+  getRowProps: (userProps?: any) => RowProps
   original: T
   index: number
   depth: number
@@ -105,6 +132,13 @@ export interface Column {
   minWidth?: number
   maxWidth?: number
   columns?: Column[]
+
+  // withColumnFilters
+  filterType?: FilterType
+  disableAllFilters?: boolean
+  disableFilter?: boolean
+  defaultCanFilter?: boolean
+  defaultCanFilterColumn?: boolean
 
   // withSorting
   sortDescFirst?: boolean
@@ -131,12 +165,12 @@ export interface TableColumn extends Column {
   toggleSorting?: (desc?: boolean, multi?: boolean) => void
   clearSorting?: () => void
   getIsSortedDesc?: () => boolean
-  getToggleSortingProps?: (userProps: any) => ToggleSortingProps
+  getToggleSortingProps?: (userProps?: any) => ToggleSortingProps
 }
 
 export interface Cell {
   id: Id
-  getCellProps: (userProps: any) => CellProps
+  getCellProps: (userProps?: any) => CellProps
   row: Row
   column: TableColumn
   value: any
@@ -152,8 +186,8 @@ export interface Plugin {
 export interface Header extends TableColumn {
   isPlaceholder: boolean
   column: TableColumn
-  getHeaderProps: (userProps: any) => HeaderProps
-  getFooterProps: (userProps: any) => FooterProps
+  getHeaderProps: (userProps?: any) => HeaderProps
+  getFooterProps: (userProps?: any) => FooterProps
   getWidth: () => number
   subHeaders: Header[]
 }
@@ -336,9 +370,33 @@ export type PluginPlugBuilder = any
 
 export interface RendererMeta {}
 
+// withColumnFilters
+
+export type FilterType =
+  | 'text'
+  | 'exactText'
+  | 'exactTextCase'
+  | 'includes'
+  | 'includesAll'
+  | 'exact'
+  | 'equals'
+  | 'between'
+  | string
+  | FilterFn
+
+export interface ColumnFilter {
+  id: Id
+  value: any
+}
+
+export interface FilterFn {
+  (rows: Row[], columnIds: Id[], filterValue: any): Row[]
+  autoRemove?: (filterValue: any, column: TableColumn) => boolean
+}
+
 // withSorting
 
-type SortType =
+export type SortType =
   | 'basic'
   | 'alphanumeric'
   | 'text'

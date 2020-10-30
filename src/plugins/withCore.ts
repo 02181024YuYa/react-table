@@ -2,7 +2,6 @@ import React from 'react'
 import {
   Plugin,
   TableInstance,
-  TableOptions,
   Header,
   Row,
   Cell,

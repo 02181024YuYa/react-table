@@ -12,19 +12,16 @@ import {
 import { withColumnFilters as name, withColumnVisibility } from '../Constants'
 
 import * as filterTypes from '../filterTypes'
+import {
+  DecorateColumn,
+  FilterFn,
+  Plugin,
+  UseInstanceAfterDataModel,
+  UseInstanceAfterState,
+  UseReduceOptions,
+} from '../types'
 
-export const withColumnFilters = {
-  name,
-  after: [withColumnVisibility],
-  plugs: {
-    useReduceOptions,
-    useInstanceAfterState,
-    useInstanceAfterDataModel,
-    decorateColumn,
-  },
-}
-
-function useReduceOptions(options) {
+const useReduceOptions: UseReduceOptions = options => {
   return {
     onColumnFiltersChange: React.useCallback(
       makeStateUpdater('columnFilters'),
@@ -43,26 +40,26 @@ function useReduceOptions(options) {
   }
 }
 
-function useInstanceAfterState(instance) {
+const useInstanceAfterState: UseInstanceAfterState = instance => {
   instance.setColumnFilters = React.useCallback(
     updater => {
-      instance.options.onColumnFiltersChange(old => {
+      instance.options.onColumnFiltersChange?.(old => {
         const {
           leafColumns,
           options: { filterTypes: userFilterTypes },
         } = instance
 
-        return functionalUpdate(updater, old).filter(filter => {
+        return functionalUpdate(updater, old)?.filter(filter => {
           const column = leafColumns.find(d => d.id === filter.id)
           const filterMethod = getFilterMethod(
-            column.filterType,
+            column?.filterType,
             userFilterTypes || {},
             filterTypes
           )
 
           if (
             shouldAutoRemoveFilter(
-              filterMethod.autoRemove,
+              (filterMethod as FilterFn)?.autoRemove,
               filter.value,
               column
             )
@@ -82,7 +79,8 @@ function useInstanceAfterState(instance) {
 
   React.useMemo(() => {
     if (instance.options.autoResetColumnFilters) {
-      instance.state.columnFilters = instance.options.initialState.columnFilters
+      instance.state.columnFilters =
+        instance.options.initialState?.columnFilters
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, columnFilterResetDeps)
@@ -101,14 +99,16 @@ function useInstanceAfterState(instance) {
         return false
       }
 
-      return getFirstDefined(
-        instance.options.disableFilters ? false : undefined,
-        instance.options.disableColumnFilters ? false : undefined,
-        column.disableAllFilters ? false : undefined,
-        column.disableFilter ? false : undefined,
-        column.defaultCanFilter,
-        column.defaultCanFilterColumn,
-        !!column.accessor
+      return (
+        getFirstDefined(
+          instance.options.disableFilters ? false : undefined,
+          instance.options.disableColumnFilters ? false : undefined,
+          column.disableAllFilters ? false : undefined,
+          column.disableFilter ? false : undefined,
+          column.defaultCanFilter,
+          column.defaultCanFilterColumn,
+          !!column.accessor
+        ) ?? false
       )
     },
     [
@@ -125,90 +125,91 @@ function useInstanceAfterState(instance) {
 
   instance.getColumnFilterValue = React.useCallback(
     columnId =>
-      instance.state.columnFilters.find(d => d.id === columnId)?.value,
+      instance.state.columnFilters?.find(d => d.id === columnId)?.value,
     [instance.state.columnFilters]
   )
 
   instance.getColumnFilterIndex = React.useCallback(
-    columnId => instance.state.columnFilters.findIndex(d => d.id === columnId),
+    columnId =>
+      instance.state.columnFilters?.findIndex(d => d.id === columnId) ?? -1,
     [instance.state.columnFilters]
   )
 
   instance.setColumnFilterValue = React.useCallback(
-    (columnId, value) =>
-      instance.setColumnFilters(
-        old => {
-          const {
-            leafColumns,
-            options: { filterTypes: userFilterTypes },
-          } = instance
+    (columnId, value) => {
+      if (!columnId) return
 
-          const column = leafColumns.find(d => d.id === columnId)
+      instance.setColumnFilters(old => {
+        const {
+          leafColumns,
+          options: { filterTypes: userFilterTypes },
+        } = instance
 
-          if (!column) {
-            throw new Error(
-              process.env.NODE_ENV !== 'production'
-                ? `React-Table: Could not find a column with id: ${columnId}`
-                : ''
-            )
-          }
+        const column = leafColumns.find(d => d.id === columnId)
 
-          const filterMethod = getFilterMethod(
-            column.filterType,
-            userFilterTypes || {},
-            filterTypes
+        if (!column) {
+          throw new Error(
+            process.env.NODE_ENV !== 'production'
+              ? `React-Table: Could not find a column with id: ${columnId}`
+              : ''
           )
-
-          const previousfilter = old.find(d => d.id === columnId)
-
-          const newFilter = functionalUpdate(
-            value,
-            previousfilter && previousfilter.value
-          )
-
-          //
-          if (
-            shouldAutoRemoveFilter(filterMethod.autoRemove, newFilter, column)
-          ) {
-            return old.filter(d => d.id !== columnId)
-          }
-
-          if (previousfilter) {
-            return old.map(d => {
-              if (d.id === columnId) {
-                return { id: columnId, value: newFilter }
-              }
-              return d
-            })
-          }
-
-          return [...old, { id: columnId, value: newFilter }]
-        },
-        {
-          type: 'setColumnFilterValue',
-          columnId,
-          value,
         }
-      ),
+
+        const filterMethod = getFilterMethod(
+          column.filterType,
+          userFilterTypes || {},
+          filterTypes
+        )
+
+        const previousfilter = old?.find(d => d.id === columnId)
+
+        const newFilter = functionalUpdate(
+          value,
+          previousfilter && previousfilter.value
+        )
+
+        //
+        if (
+          shouldAutoRemoveFilter(
+            (filterMethod as FilterFn)?.autoRemove,
+            newFilter,
+            column
+          )
+        ) {
+          return old?.filter(d => d.id !== columnId)
+        }
+
+        const newFilterObj = { id: columnId, value: newFilter }
+
+        if (previousfilter) {
+          return old?.map(d => {
+            if (d.id === columnId) {
+              return newFilterObj
+            }
+            return d
+          })
+        }
+
+        if (old?.length) {
+          return [...old, newFilterObj]
+        }
+
+        return [newFilterObj]
+      })
+    },
     [instance]
   )
 
   instance.resetColumnFilters = React.useCallback(
     () =>
-      setState(
-        old => ({
-          ...old,
-          columnFilters: instance.options.initialState.columnFilters,
-        }),
-        {
-          type: 'resetColumnFilters',
-        }
-      ),
+      instance.setColumnFilters(instance.options.initialState?.columnFilters),
     [instance]
   )
+
+  return instance
 }
 
-function useInstanceAfterDataModel(instance) {
+const useInstanceAfterDataModel: UseInstanceAfterDataModel = instance => {
   const {
     options: { manualColumnFilters },
     state: { columnFilters },
@@ -334,6 +335,18 @@ function useInstanceAfterDataModel(instance) {
     flatRows: filteredFlatRows,
     rowsById: filteredRowsById,
   })
+
+  return instance
+}
+
+const decorateColumn: DecorateColumn = (column, { instance }) => {
+  column.getCanFilter = () => instance.getColumnCanFilter(column.id)
+  column.getFilterIndex = () => instance.getColumnFilterIndex(column.id)
+  column.getIsFiltered = () => instance.getColumnIsFiltered(column.id)
+  column.getFilterValue = () => instance.getColumnFilterValue(column.id)
+  column.setFilterValue = val => instance.setColumnFilterValue(column.id, val)
+
+  return column
 }
 
 function facetFilterValues(column, rows, instance) {
@@ -382,10 +395,13 @@ function facetFilterValues(column, rows, instance) {
   }
 }
 
-function decorateColumn(column, { instance }) {
-  column.getCanFilter = () => instance.getColumnCanFilter(column.id)
-  column.getFilterIndex = () => instance.getColumnFilterIndex(column.id)
-  column.getIsFiltered = () => instance.getColumnIsFiltered(column.id)
-  column.getFilterValue = () => instance.getColumnFilterValue(column.id)
-  column.setFilterValue = val => instance.setColumnFilterValue(column.id, val)
+export const withColumnFilters: Plugin = {
+  name,
+  after: [withColumnVisibility],
+  plugs: {
+    useReduceOptions,
+    useInstanceAfterState,
+    useInstanceAfterDataModel,
+    decorateColumn,
+  },
 }
