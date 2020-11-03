@@ -1,7 +1,6 @@
-import React from 'react'
+import React, { MouseEvent, TouchEvent } from 'react'
 
 import {
-  getFirstDefined,
   isFunction,
   orderBy,
   useMountedLayoutEffect,
@@ -193,12 +192,10 @@ const useInstanceAfterState: UseInstanceAfterState = instance => {
       }
 
       return (
-        getFirstDefined(
-          instance.options.disableSorting ? false : undefined,
-          column.disableSorting ? false : undefined,
-          column.defaultCanSort,
-          !!column.accessor
-        ) ?? false
+        (instance.options.disableSorting ? false : undefined) ??
+        (column.disableSorting ? false : undefined) ??
+        column.defaultCanSort ??
+        !!column.accessor
       )
     },
     [instance]
@@ -340,7 +337,7 @@ const decorateColumn: DecorateColumn = (column, { instance }) => {
 
     return {
       onClick: canSort
-        ? (e: { persist?: any }) => {
+        ? (e: MouseEvent | TouchEvent) => {
             e.persist()
             column.toggleSorting?.(
               undefined,

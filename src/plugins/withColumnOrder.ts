@@ -1,20 +1,15 @@
 import React from 'react'
 
-import { functionalUpdate, makeStateUpdater } from '../utils'
+import { makeStateUpdater } from '../utils'
 
 import { withColumnOrder as name, withColumnVisibility } from '../Constants'
+import {
+  UseInstanceAfterState,
+  UseReduceLeafColumns,
+  UseReduceOptions,
+} from '../types'
 
-export const withColumnOrder = {
-  name,
-  after: [withColumnVisibility],
-  plugs: {
-    useReduceOptions,
-    useInstanceAfterState,
-    useReduceLeafColumns,
-  },
-}
-
-function useReduceOptions(options) {
+const useReduceOptions: UseReduceOptions = options => {
   return {
     onColumnOrderChange: React.useCallback(makeStateUpdater('columnOrder'), []),
     ...options,
@@ -25,27 +20,25 @@ function useReduceOptions(options) {
   }
 }
 
-function useInstanceAfterState(instance) {
+const useInstanceAfterState: UseInstanceAfterState = instance => {
   instance.setColumnOrder = React.useCallback(
-    columnOrder =>
-      instance.onColumnOrderChange(
-        old => ({
-          ...old,
-          columnOrder: functionalUpdate(columnOrder, old.columnOrder),
-        }),
-        instance
-      ),
+    updater => instance.options.onColumnOrderChange?.(updater, instance),
     [instance]
   )
 
   instance.resetColumnOrder = React.useCallback(
     () =>
-      instance.setColumnOrder(instance.options.initialState.columnOrder || []),
+      instance.setColumnOrder(instance.options.initialState?.columnOrder ?? []),
     [instance]
   )
+
+  return instance
 }
 
-function useReduceLeafColumns(leafColumns, { instance }) {
+const useReduceLeafColumns: UseReduceLeafColumns = (
+  leafColumns,
+  { instance }
+) => {
   const {
     state: { columnOrder },
   } = instance
@@ -83,4 +76,14 @@ function useReduceLeafColumns(leafColumns, { instance }) {
 
     return orderedColumns
   }, [columnOrder, leafColumns])
+}
+
+export const withColumnOrder = {
+  name,
+  after: [withColumnVisibility],
+  plugs: {
+    useReduceOptions,
+    useInstanceAfterState,
+    useReduceLeafColumns,
+  },
 }

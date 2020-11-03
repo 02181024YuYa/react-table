@@ -1,7 +1,6 @@
 import React from 'react'
 
 import {
-  getFirstDefined,
   flattenBy,
   groupBy,
   useMountedLayoutEffect,
@@ -104,10 +103,10 @@ function useInstanceAfterState(instance) {
         return false
       }
 
-      return getFirstDefined(
-        instance.options.disableGrouping ? false : undefined,
-        column.disableGrouping ? false : undefined,
-        column.defaultCanGrouping,
+      return (
+        (instance.options.disableGrouping ? false : undefined) ??
+        (column.disableGrouping ? false : undefined) ??
+        column.defaultCanGrouping ??
         !!column.accessor
       )
     },

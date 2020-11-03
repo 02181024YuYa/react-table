@@ -1,12 +1,5 @@
 import React from 'react'
-import {
-  TableColumn,
-  RendererMeta,
-  TableInstance,
-  SortFn,
-  FromUpdater,
-  FilterFn,
-} from './types'
+import { TableColumn, RendererMeta, FilterFn, Header } from './types'
 
 export function composeDecorator(fns) {
   return (initial, meta) => fns.forEach(fn => fn(initial, meta), initial)
@@ -17,12 +10,19 @@ export function composeReducer(fns) {
     fns.reduce((reduced, fn) => fn(reduced, meta), initial)
 }
 
-export function functionalUpdate<T>(updater?: any, old?: T): T {
-  if (typeof updater === 'function') {
-    return updater(old)
-  }
+export type DataUpdateFunction<TInput, TOutput> = (input: TInput) => TOutput
 
-  return updater
+export type Updater<TInput, TOutput> =
+  | TOutput
+  | DataUpdateFunction<TInput, TOutput>
+
+export function functionalUpdate<TInput, TOutput = TInput>(
+  updater: Updater<TInput, TOutput>,
+  input: TInput
+): TOutput {
+  return typeof updater === 'function'
+    ? (updater as DataUpdateFunction<TInput, TOutput>)(input)
+    : updater
 }
 
 export function noop() {
@@ -117,14 +117,6 @@ export function flattenColumns(
   )
 }
 
-export function getFirstDefined<T extends any>(...args: T[]): T | undefined {
-  for (let i = 0; i < args.length; i += 1) {
-    if (typeof args[i] !== 'undefined') {
-      return args[i]
-    }
-  }
-}
-
 export function isFunction(a: any): a is (...any: any[]) => any {
   return typeof a === 'function'
 }
@@ -178,7 +170,7 @@ export function expandRows(rows, instance) {
 export function getFilterMethod<
   T extends string | FilterFn | undefined,
   U extends { [key: string]: T }
->(filter: T, userFilterTypes: U, filterTypes: U) {
+>(filter: T, userFilterTypes: U, filterTypes: U): FilterFn {
   return isFunction(filter)
     ? filter
     : userFilterTypes[filter as string] || filterTypes[filter as string]
@@ -261,10 +253,10 @@ export function composeDecorate(fns) {
   }
 }
 
-export function getLeafHeaders(originalHeader) {
-  const leafHeaders = []
+export function getLeafHeaders(originalHeader: Header) {
+  const leafHeaders: Header[] = []
 
-  const recurseHeader = header => {
+  const recurseHeader = (header: Header) => {
     if (header.subHeaders && header.subHeaders.length) {
       header.subHeaders.map(recurseHeader)
     }

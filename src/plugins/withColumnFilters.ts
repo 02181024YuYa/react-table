@@ -1,7 +1,6 @@
 import React from 'react'
 
 import {
-  getFirstDefined,
   getFilterMethod,
   functionalUpdate,
   shouldAutoRemoveFilter,
@@ -15,7 +14,11 @@ import * as filterTypes from '../filterTypes'
 import {
   DecorateColumn,
   FilterFn,
+  RowId,
   Plugin,
+  Row,
+  TableColumn,
+  TableInstance,
   UseInstanceAfterDataModel,
   UseInstanceAfterState,
   UseReduceOptions,
@@ -100,15 +103,13 @@ const useInstanceAfterState: UseInstanceAfterState = instance => {
       }
 
       return (
-        getFirstDefined(
-          instance.options.disableFilters ? false : undefined,
-          instance.options.disableColumnFilters ? false : undefined,
-          column.disableAllFilters ? false : undefined,
-          column.disableFilter ? false : undefined,
-          column.defaultCanFilter,
-          column.defaultCanFilterColumn,
-          !!column.accessor
-        ) ?? false
+        (column.disableAllFilters ? false : undefined) ??
+        (column.disableFilter ? false : undefined) ??
+        (instance.options.disableFilters ? false : undefined) ??
+        (instance.options.disableColumnFilters ? false : undefined) ??
+        column.defaultCanFilter ??
+        column.defaultCanFilterColumn ??
+        !!column.accessor
       )
     },
     [
@@ -223,20 +224,20 @@ const useInstanceAfterDataModel: UseInstanceAfterDataModel = instance => {
     filteredFlatRows,
     filteredRowsById,
   ] = React.useMemo(() => {
-    if (manualColumnFilters || !columnFilters.length) {
+    if (manualColumnFilters || !columnFilters?.length) {
       return [rows, flatRows, rowsById]
     }
 
     if (process.env.NODE_ENV !== 'production' && instance.options.debug)
       console.info('Filtering...')
 
-    const newFilteredFlatRows = []
-    const newFilteredRowsById = {}
+    const newFilteredFlatRows: Row[] = []
+    const newFilteredRowsById: Record<RowId, Row> = {}
 
     const enableFacetedFilters = instance.options.enableFacetedFilters
 
     // Filters top level and nested rows
-    const filterRows = (rowsToFilter, depth = 0) => {
+    const filterRows = (rowsToFilter: Row[], depth = 0) => {
       if (instance.options.filterFromChildrenUp) {
         rowsToFilter = rowsToFilter.filter(row => {
           if (!row.subRows?.length) {
@@ -261,22 +262,24 @@ const useInstanceAfterDataModel: UseInstanceAfterDataModel = instance => {
           facetFilterValues(column, rowsToFilter, instance)
         }
 
-        const filterMethod = getFilterMethod(
+        const filterFn = getFilterMethod(
           column.filterType,
           instance.options.filterTypes || {},
           filterTypes
-        )
+        ) as FilterFn
 
-        if (process.env.NODE_ENV !== 'production' && !filterMethod) {
-          console.warn(
-            `Could not find a valid 'column.filterType' for column with the ID: ${column.id}.`
-          )
+        if (!filterFn) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn(
+              `Could not find a valid 'column.filterType' for column with the ID: ${column.id}.`
+            )
+          }
           return
         }
 
-        // Pass the rows, id, filterValue and column to the filterMethod
+        // Pass the rows, id, filterValue and column to the filterFn
         // to get the filtered rows back
-        rowsToFilter = filterMethod(rowsToFilter, [columnId], filterValue)
+        rowsToFilter = filterFn(rowsToFilter, [columnId], filterValue)
       })
 
       // Apply the filter to any subRows
@@ -306,7 +309,7 @@ const useInstanceAfterDataModel: UseInstanceAfterDataModel = instance => {
     // Now that each filtered column has it's partially filtered rows,
     // lets assign the final filtered rows to all of the other columns
     const nonFilteredColumns = instance.leafColumns.filter(
-      column => !columnFilters.find(d => d.id === column.id)
+      column => !columnFilters?.find(d => d.id === column.id)
     )
 
     // This essentially enables faceted filter options to be built easily
@@ -349,7 +352,11 @@ const decorateColumn: DecorateColumn = (column, { instance }) => {
   return column
 }
 
-function facetFilterValues(column, rows, instance) {
+function facetFilterValues(
+  column: TableColumn,
+  rows: Row[],
+  instance: TableInstance
+) {
   const enableUniqueValues =
     instance.options.enableUniqueValues || column.enableUniqueValues
 
@@ -374,21 +381,21 @@ function facetFilterValues(column, rows, instance) {
       const value = row.values[column.id]
 
       if (enableUniqueValues) {
-        if (column.preFilteredUniqueValues.has(value)) {
-          column.preFilteredUniqueValues.set(
+        if (column.preFilteredUniqueValues?.has(value)) {
+          column.preFilteredUniqueValues?.set(
             value,
-            column.preFilteredUniqueValues.get(value) + 1
+            (column.preFilteredUniqueValues?.get(value) ?? 0) + 1
           )
         } else {
-          column.preFilteredUniqueValues.set(value, 1)
+          column.preFilteredUniqueValues?.set(value, 1)
         }
       }
 
       if (enableMinMaxValues) {
-        if (value < column.preFilteredMinMaxValues[0]) {
-          column.preFilteredMinMaxValues[0] = value
-        } else if (value > column.preFilteredMinMaxValues[1]) {
-          column.preFilteredMinMaxValues[1] = value
+        if (value < column.preFilteredMinMaxValues![0]) {
+          column.preFilteredMinMaxValues![0] = value
+        } else if (value > column.preFilteredMinMaxValues![1]) {
+          column.preFilteredMinMaxValues![1] = value
         }
       }
     })

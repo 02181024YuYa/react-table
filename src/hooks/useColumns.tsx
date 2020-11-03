@@ -81,6 +81,7 @@ export default function useColumns(instance: TableInstance) {
       return columns.map(column => {
         const tableColumn: TableColumn = {
           ...column,
+          id: column.id!,
           parent,
           depth,
           originalColumn: column,

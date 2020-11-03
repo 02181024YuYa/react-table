@@ -1,8 +1,6 @@
 import React from 'react'
 
 import {
-  functionalUpdate,
-  getFirstDefined,
   buildHeaderGroups,
   recurseHeaderForSpans,
   flattenBy,
@@ -14,22 +12,18 @@ import {
   withColumnVisibility,
   withColumnOrder,
 } from '../Constants'
+import {
+  Column,
+  DecorateColumn,
+  UseInstanceAfterState,
+  UseReduceFlatHeaders,
+  UseReduceFooterGroups,
+  UseReduceHeaderGroups,
+  UseReduceLeafColumns,
+  UseReduceOptions,
+} from '../types'
 
-export const withColumnPinning = {
-  name,
-  after: [withColumnVisibility, withColumnOrder],
-  plugs: {
-    useReduceOptions,
-    useInstanceAfterState,
-    decorateColumn,
-    useReduceLeafColumns,
-    useReduceHeaderGroups,
-    useReduceFooterGroups,
-    useReduceFlatHeaders,
-  },
-}
-
-function useReduceOptions(options) {
+const useReduceOptions: UseReduceOptions = options => {
   return {
     onColumnPinningChange: React.useCallback(
       makeStateUpdater('columnPinning'),
@@ -41,22 +35,25 @@ function useReduceOptions(options) {
       columnPinning: {
         left: [],
         right: [],
-        ...options.initialState.columnPinning,
+        ...options.initialState?.columnPinning,
       },
     },
   }
 }
 
-function useInstanceAfterState(instance) {
+const useInstanceAfterState: UseInstanceAfterState = instance => {
+  const columnPinningLeft = instance.state.columnPinning?.left
+  const columnPinningRight = instance.state.columnPinning?.right
+
   instance.setColumnPinning = React.useCallback(
-    columnPinning => instance.onColumnPinningChange(columnPinning, instance),
+    updater => instance.options.onColumnPinningChange?.(updater, instance),
     [instance]
   )
 
   instance.resetColumnPinning = React.useCallback(
     () =>
       instance.setColumnPinning(
-        instance.options.initialState.columnPinning || []
+        instance.options.initialState?.columnPinning ?? {}
       ),
     [instance]
   )
@@ -64,15 +61,15 @@ function useInstanceAfterState(instance) {
   instance.toggleColumnPinning = React.useCallback(
     (columnId, side, value) => {
       instance.setColumnPinning(old => {
-        const isIncluded = old[side].includes(columnId)
+        const isIncluded = old?.[side]?.includes(columnId)
 
         value = typeof value !== 'undefined' ? value : !isIncluded
 
         return {
           ...old,
           [side]: value
-            ? [...old[side], columnId]
-            : old[side].filter(d => d !== columnId),
+            ? [...(old?.[side] ?? []), columnId]
+            : old?.[side]?.filter(d => d !== columnId) ?? [],
         }
       })
     },
@@ -87,10 +84,10 @@ function useInstanceAfterState(instance) {
         return false
       }
 
-      return getFirstDefined(
-        instance.options.disablePinning ? false : undefined,
-        column.disablePinning ? false : undefined,
-        column.defaultCanPin,
+      return (
+        (column.disablePinning ? false : undefined) ??
+        (instance.options.disablePinning ? false : undefined) ??
+        column.defaultCanPin ??
         !!column.accessor
       )
     },
@@ -98,66 +95,80 @@ function useInstanceAfterState(instance) {
   )
 
   instance.getColumnIsPinned = React.useCallback(
-    columnId =>
-      instance.state.columnPinning.left.includes(columnId)
+    columnId => {
+      return columnPinningLeft?.includes(columnId)
         ? 'left'
-        : instance.state.columnPinning.right.includes(columnId)
+        : columnPinningRight?.includes(columnId)
         ? 'right'
-        : false,
-    [instance.state.columnPinning.left, instance.state.columnPinning.right]
+        : false
+    },
+    [columnPinningLeft, columnPinningRight]
   )
 
   instance.getColumnPinnedIndex = React.useCallback(
     columnId => {
-      const side = instance.getColumnIsPinned()
-      return instance.state.columnPinning[side].indexOf(columnId)
+      const side = instance.getColumnIsPinned(columnId)
+      return side
+        ? instance.state.columnPinning?.[side]?.indexOf(columnId) ?? -1
+        : 0
     },
     [instance]
   )
+
+  return instance
 }
 
-function decorateColumn(column, { instance }) {
+const decorateColumn: DecorateColumn = (column, { instance }) => {
   column.getCanPin = () => instance.getColumnCanPin(column.id)
   column.getPinnedIndex = () => instance.getColumnPinnedIndex(column.id)
   column.getIsPinned = () => instance.getColumnIsPinned(column.id)
   column.togglePinning = (side, value) =>
     instance.toggleColumnPinning(column.id, side, value)
+
+  return column
 }
 
-function useReduceLeafColumns(leafColumns, { instance }) {
-  const {
-    state: {
-      columnPinning: { left, right },
-    },
-  } = instance
-
-  console.log(instance)
+const useReduceLeafColumns: UseReduceLeafColumns = (
+  leafColumns,
+  { instance }
+) => {
+  const columnPinningLeft = instance.state.columnPinning?.left
+  const columnPinningRight = instance.state.columnPinning?.right
 
   instance.centerLeafColumns = React.useMemo(() => {
-    if (left.length || right.length) {
+    if (columnPinningLeft?.length || columnPinningRight?.length) {
       return leafColumns.filter(
-        column => !left.includes(column.id) && !right.includes(column.id)
+        column =>
+          !columnPinningLeft?.includes(column.id) &&
+          !columnPinningRight?.includes(column.id)
       )
     }
     return leafColumns
-  }, [leafColumns, left, right])
+  }, [columnPinningLeft, columnPinningRight, leafColumns])
 
   instance.leftLeafColumns = React.useMemo(() => {
-    return left
-      .map(columnId => leafColumns.find(d => d.id === columnId))
-      .filter(Boolean)
-  }, [leafColumns, left])
+    return (
+      (columnPinningLeft
+        ?.map(columnId => leafColumns.find(d => d.id === columnId))
+        .filter(Boolean) as Column[]) ?? []
+    )
+  }, [columnPinningLeft, leafColumns])
 
   instance.rightLeafColumns = React.useMemo(() => {
-    return right
-      .map(columnId => leafColumns.find(d => d.id === columnId))
-      .filter(Boolean)
-  }, [leafColumns, right])
+    return (
+      (columnPinningRight
+        ?.map(columnId => leafColumns.find(d => d.id === columnId))
+        .filter(Boolean) as Column[]) ?? []
+    )
+  }, [columnPinningRight, leafColumns])
 
   return leafColumns
 }
 
-function useReduceHeaderGroups(headerGroups, { instance }) {
+const useReduceHeaderGroups: UseReduceHeaderGroups = (
+  headerGroups,
+  { instance }
+) => {
   const {
     columns,
     centerLeafColumns,
@@ -193,7 +204,10 @@ function useReduceHeaderGroups(headerGroups, { instance }) {
   return headerGroups
 }
 
-function useReduceFooterGroups(headerGroups, { instance }) {
+const useReduceFooterGroups: UseReduceFooterGroups = (
+  headerGroups,
+  { instance }
+) => {
   const { centerHeaderGroups, leftHeaderGroups, rightHeaderGroups } = instance
 
   instance.centerHeaderGroups = React.useMemo(
@@ -214,7 +228,7 @@ function useReduceFooterGroups(headerGroups, { instance }) {
   return headerGroups
 }
 
-function useReduceFlatHeaders(_, { instance }) {
+const useReduceFlatHeaders: UseReduceFlatHeaders = (_, { instance }) => {
   const { centerHeaderGroups, leftHeaderGroups, rightHeaderGroups } = instance
 
   return flattenBy(
@@ -222,4 +236,18 @@ function useReduceFlatHeaders(_, { instance }) {
     'headers',
     true
   )
+}
+
+export const withColumnPinning = {
+  name,
+  after: [withColumnVisibility, withColumnOrder],
+  plugs: {
+    useReduceOptions,
+    useInstanceAfterState,
+    decorateColumn,
+    useReduceLeafColumns,
+    useReduceHeaderGroups,
+    useReduceFooterGroups,
+    useReduceFlatHeaders,
+  },
 }

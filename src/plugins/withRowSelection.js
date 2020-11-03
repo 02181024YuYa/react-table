@@ -344,8 +344,6 @@ function useReduceLeafColumns(orderedColumns) {
   }, [orderedColumns])
 }
 
-useReduceLeafColumns.after = ['withGrouping', 'withExpanding']
-
 function decorateRow(row, { instance }) {
   row.getIsSelected = () =>
     instance.options.selectSubRows

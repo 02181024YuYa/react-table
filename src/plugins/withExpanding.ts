@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { MouseEvent, TouchEvent } from 'react'
 
 import {
   findExpandedDepth,
@@ -15,29 +15,20 @@ import {
   withGrouping,
   withSorting,
 } from '../Constants'
+import {
+  DecorateRow,
+  Expanded,
+  UseInstanceAfterDataModel,
+  UseInstanceAfterState,
+  UseReduceLeafColumns,
+  UseReduceOptions,
+} from '../types'
 
-export const withExpanding = {
-  name,
-  after: [
-    withColumnVisibility,
-    withColumnFilters,
-    withGlobalFilter,
-    withGrouping,
-    withSorting,
-  ],
-  plugs: {
-    useReduceOptions,
-    useInstanceAfterState,
-    useInstanceAfterDataModel,
-    useReduceLeafColumns,
-    decorateRow,
-  },
-}
-
-function useReduceOptions(options) {
+const useReduceOptions: UseReduceOptions = options => {
   return {
     onExpandedChange: React.useCallback(makeStateUpdater('expanded'), []),
     manualExpandedKey: 'expanded',
+    manualExpanding: false,
     expandSubRows: true,
     ...options,
     initialState: {
@@ -47,10 +38,10 @@ function useReduceOptions(options) {
   }
 }
 
-function useInstanceAfterState(instance) {
+const useInstanceAfterState: UseInstanceAfterState = instance => {
   instance.setExpanded = React.useCallback(
     updater => {
-      instance.options.onExpandedChange(updater, instance)
+      instance.options.onExpandedChange?.(updater, instance)
     },
     [instance]
   )
@@ -59,7 +50,7 @@ function useInstanceAfterState(instance) {
 
   React.useMemo(() => {
     if (instance.options.autoResetExpanded) {
-      instance.state.expanded = instance.options.initialState.expanded
+      instance.state.expanded = instance.options.initialState?.expanded ?? {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, expandedResetDeps)
@@ -73,12 +64,14 @@ function useInstanceAfterState(instance) {
   instance.getIsAllRowsExpanded = React.useCallback(() => {
     let isAllRowsExpanded = Boolean(
       Object.keys(instance.rowsById).length &&
-        Object.keys(instance.state.expanded).length
+        Object.keys(instance.state?.expanded ?? {}).length
     )
 
     if (isAllRowsExpanded) {
       if (
-        Object.keys(instance.rowsById).some(id => !instance.state.expanded[id])
+        Object.keys(instance.rowsById).some(
+          id => !instance.state.expanded?.[id]
+        )
       ) {
         isAllRowsExpanded = false
       }
@@ -94,10 +87,12 @@ function useInstanceAfterState(instance) {
 
   instance.toggleRowExpanded = React.useCallback(
     (id, value) => {
-      instance.setExpanded(old => {
-        const exists = old[id]
+      if (!id) return
 
-        value = typeof value !== 'undefined' ? value : !exists
+      instance.setExpanded((old = {}) => {
+        const exists = old?.[id]
+
+        value = value ?? !exists
 
         if (!exists && value) {
           return {
@@ -118,12 +113,10 @@ function useInstanceAfterState(instance) {
 
   instance.toggleAllRowsExpanded = React.useCallback(
     value => {
-      const { isAllRowsExpanded, rowsById } = instance
+      const { getIsAllRowsExpanded, rowsById } = instance
 
-      value = typeof value !== 'undefined' ? value : !isAllRowsExpanded
-
-      if (value) {
-        const expanded = {}
+      if (value ?? !getIsAllRowsExpanded()) {
+        const expanded: Expanded = {}
 
         Object.keys(rowsById).forEach(rowId => {
           expanded[rowId] = true
@@ -137,21 +130,22 @@ function useInstanceAfterState(instance) {
   )
 
   instance.resetExpanded = React.useCallback(
-    () => instance.setExpanded(instance.options.initialState.expanded),
+    () => instance.setExpanded(instance.options.initialState?.expanded ?? {}),
     [instance]
   )
 
   instance.getToggleAllRowsExpandedProps = (props = {}) => ({
     title: 'Toggle All Rows Expanded',
-    ...props,
-    onClick: e => {
+    onClick: () => {
       instance.toggleAllRowsExpanded()
-      if (props.onClick) props.onClick(e)
     },
+    ...props,
   })
+
+  return instance
 }
 
-function useInstanceAfterDataModel(instance) {
+const useInstanceAfterDataModel: UseInstanceAfterDataModel = instance => {
   const {
     rows,
     state: { expanded },
@@ -175,9 +169,14 @@ function useInstanceAfterDataModel(instance) {
     expandedRows,
     rows: expandedRows,
   })
+
+  return instance
 }
 
-function useReduceLeafColumns(orderedColumns, { instance }) {
+const useReduceLeafColumns: UseReduceLeafColumns = (
+  orderedColumns,
+  { instance }
+) => {
   return React.useMemo(() => {
     if (instance.state.grouping?.length) {
       return [
@@ -189,20 +188,42 @@ function useReduceLeafColumns(orderedColumns, { instance }) {
   }, [instance.state.grouping.length, orderedColumns])
 }
 
-useReduceLeafColumns.after = ['withGrouping']
-
-function decorateRow(row, { instance }) {
+const decorateRow: DecorateRow = (row, { instance }) => {
   row.toggleExpanded = set => instance.toggleRowExpanded(row.id, set)
 
   row.getIsExpanded = () =>
-    (row.original && row.original[instance.options.manualExpandedKey]) ||
-    instance.state.expanded[row.id]
+    instance.options.manualExpanding
+      ? row.original[instance.options.manualExpandedKey as string]
+      : instance.state.expanded?.[row.id]
 
   row.getCanExpand = () => row.subRows && !!row.subRows.length
 
   row.getToggleExpandedProps = (props = {}) => ({
-    onClick: e => e.stopPropagation() || row.toggleExpanded(),
+    onClick: (e: MouseEvent | TouchEvent) => {
+      e.stopPropagation()
+      row.toggleExpanded?.()
+    },
     title: 'Toggle Row Expanded',
     ...props,
   })
+
+  return row
+}
+
+export const withExpanding = {
+  name,
+  after: [
+    withColumnVisibility,
+    withColumnFilters,
+    withGlobalFilter,
+    withGrouping,
+    withSorting,
+  ],
+  plugs: {
+    useReduceOptions,
+    useInstanceAfterState,
+    useInstanceAfterDataModel,
+    useReduceLeafColumns,
+    decorateRow,
+  },
 }

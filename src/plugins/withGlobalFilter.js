@@ -1,7 +1,6 @@
 import React from 'react'
 
 import {
-  getFirstDefined,
   getFilterMethod,
   functionalUpdate,
   shouldAutoRemoveFilter,
@@ -97,13 +96,13 @@ function useInstanceAfterState(instance) {
         return false
       }
 
-      return getFirstDefined(
-        instance.options.disableFilters ? false : undefined,
-        instance.options.disableGlobalFilters ? false : undefined,
-        column.disableAllFilters ? false : undefined,
-        column.disableGlobalFilter ? false : undefined,
-        column.defaultCanFilter,
-        column.defaultCanGlobalFilter,
+      return (
+        (instance.options.disableFilters ? false : undefined) ??
+        (instance.options.disableGlobalFilters ? false : undefined) ??
+        (column.disableAllFilters ? false : undefined) ??
+        (column.disableGlobalFilter ? false : undefined) ??
+        column.defaultCanFilter ??
+        column.defaultCanGlobalFilter ??
         !!column.accessor
       )
     },

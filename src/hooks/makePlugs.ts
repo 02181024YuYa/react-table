@@ -1,4 +1,4 @@
-import { InstancePlugs, Plugin, PlugType } from '../types'
+import { Plugin, PlugType, PluginPlugs } from '../types'
 import { composeDecorator, composeReducer } from '../utils'
 
 const plugTypes: PlugType[] = [
@@ -53,33 +53,11 @@ export default function makePlugs(plugins: Plugin[]) {
 
   return plugTypes.reduce((plugs, [plugType, plugCompositionFn]) => {
     const pluginPlugs = plugins
-      // Get the info necessary to sort
-      .map(plugin => {
-        const plugFn = plugin.plugs[plugType]
-
-        return {
-          pluginName: plugin.name,
-          plug: plugFn,
-          after: plugFn?.after || [],
-        }
-      })
-      // remove empty
-      .filter(d => d.plug)
-      // sort for optional after deps
-      .sort((a, b) => {
-        if (a.after.includes(b.pluginName) || a.after.length > b.after.length) {
-          return 1
-        }
-        if (b.after.includes(a.pluginName) || b.after.length > a.after.length) {
-          return -1
-        }
-        return 0
-      })
-      // map back to the plug functions
-      .map(d => d.plug)
+      .map(plugin => plugin.plugs[plugType])
+      .filter(Boolean)
 
     plugs[plugType] = plugCompositionFn(pluginPlugs)
 
     return plugs
-  }, {} as InstancePlugs)
+  }, {} as PluginPlugs)
 }
