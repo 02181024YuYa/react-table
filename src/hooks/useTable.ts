@@ -26,19 +26,19 @@ export function useTable(
   const instance: TableInstance = instanceRef.current
 
   // Apply the defaults to our options
-  instance.options = instance.plugs?.useReduceOptions(options, {
+  instance.options = instance.plugs.useReduceOptions!(options, {
     instance,
   })
 
   useTableState(instance)
 
-  instance.plugs?.useInstanceAfterState(instance)
+  instance.plugs?.useInstanceAfterState?.(instance)
 
   useColumns(instance)
   useHeadersAndFooters(instance)
   useDataModel(instance)
 
-  instance.plugs?.useInstanceAfterDataModel(instance)
+  instance.plugs?.useInstanceAfterDataModel?.(instance)
 
   return instance
 }

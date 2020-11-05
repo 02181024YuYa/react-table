@@ -1,12 +1,24 @@
 import React from 'react'
-import { TableColumn, RendererMeta, FilterFn, Header } from './types'
+import {
+  TableColumn,
+  RendererMeta,
+  FilterFn,
+  Header,
+  Row,
+  RowId,
+  TableInstance,
+  TableState,
+  Expanded,
+  HeaderGroup,
+} from './types'
 
-export function composeDecorator(fns) {
-  return (initial, meta) => fns.forEach(fn => fn(initial, meta), initial)
+export function composeDecorator(fns: any[]) {
+  return (initial: any, meta: any) =>
+    fns.forEach(fn => fn(initial, meta), initial)
 }
 
-export function composeReducer(fns) {
-  return (initial, meta) =>
+export function composeReducer(fns: any[]) {
+  return (initial: any, meta: any) =>
     fns.reduce((reduced, fn) => fn(reduced, meta), initial)
 }
 
@@ -29,18 +41,18 @@ export function noop() {
   //
 }
 
-export function makeStateUpdater(key) {
-  return (updater, instance) => {
-    instance.setState(old => {
+export function makeStateUpdater(key: string) {
+  return (updater: any, instance: TableInstance) => {
+    instance.setState((old: TableState) => {
       return {
         ...old,
-        [key]: functionalUpdate(updater, old[key]),
+        [key]: functionalUpdate(updater, (old as any)[key]),
       }
     })
   }
 }
 
-export function useGetLatest(obj) {
+export function useGetLatest(obj: any) {
   const ref = React.useRef()
   ref.current = obj
 
@@ -51,7 +63,7 @@ export function useGetLatest(obj) {
 export const safeUseLayoutEffect =
   typeof document !== 'undefined' ? React.useLayoutEffect : React.useEffect
 
-export function useMountedLayoutEffect(fn, deps) {
+export function useMountedLayoutEffect(fn: any, deps: any[]) {
   const mountedRef = React.useRef(false)
 
   safeUseLayoutEffect(() => {
@@ -146,17 +158,17 @@ export function flattenBy<T extends any[], U>(
   return flat as U
 }
 
-export function expandRows(rows, instance) {
-  const expandedRows = []
+export function expandRows(rows: Row[], instance: TableInstance) {
+  const expandedRows: Row[] = []
 
-  const handleRow = row => {
+  const handleRow = (row: Row) => {
     expandedRows.push(row)
 
     if (
       instance.options.expandSubRows &&
       row.subRows &&
       row.subRows.length &&
-      row.getIsExpanded()
+      row.getIsExpanded?.()
     ) {
       row.subRows.forEach(handleRow)
     }
@@ -167,26 +179,18 @@ export function expandRows(rows, instance) {
   return expandedRows
 }
 
-export function getFilterMethod<
-  T extends string | FilterFn | undefined,
-  U extends { [key: string]: T }
->(filter: T, userFilterTypes: U, filterTypes: U): FilterFn {
+export function getFilterMethod(filter: any, userTypes: any, types: any): any {
   return isFunction(filter)
     ? filter
-    : userFilterTypes[filter as string] || filterTypes[filter as string]
+    : userTypes[filter as string] ?? types[filter as string]
 }
 
-export function shouldAutoRemoveFilter(autoRemove, value, column) {
+export function shouldAutoRemoveFilter(
+  autoRemove: FilterFn['autoRemove'],
+  value: any,
+  column?: TableColumn
+) {
   return autoRemove ? autoRemove(value, column) : typeof value === 'undefined'
-}
-
-export function groupBy(rows, columnId) {
-  return rows.reduce((prev, row) => {
-    const resKey = `${row.values[columnId]}`
-    prev[resKey] = Array.isArray(prev[resKey]) ? prev[resKey] : []
-    prev[resKey].push(row)
-    return prev
-  }, {})
 }
 
 type BasicSortFn = (a: any, b: any) => number
@@ -209,8 +213,15 @@ export function orderBy<T extends { index: number }>(
   return copy
 }
 
-export function getRowIsSelected(row, selection) {
-  if (selection[row.id]) {
+export function getRowIsSelected(
+  row: Row,
+  selection: Record<RowId, boolean>,
+  manualRowSelectedKey?: string
+) {
+  if (
+    selection[row.id] ||
+    (manualRowSelectedKey && row.original[manualRowSelectedKey])
+  ) {
     return true
   }
 
@@ -218,25 +229,25 @@ export function getRowIsSelected(row, selection) {
     let allChildrenSelected = true
     let someSelected = false
 
-    row.subRows.forEach(subRow => {
+    row.subRows.forEach((subRow: Row) => {
       // Bail out early if we know both of these
       if (someSelected && !allChildrenSelected) {
         return
       }
 
-      if (getRowIsSelected(subRow, selection)) {
+      if (getRowIsSelected(subRow, selection, manualRowSelectedKey)) {
         someSelected = true
       } else {
         allChildrenSelected = false
       }
     })
-    return allChildrenSelected ? true : someSelected ? null : false
+    return allChildrenSelected ? true : someSelected ? 'some' : false
   }
 
   return false
 }
 
-export function findExpandedDepth(expanded) {
+export function findExpandedDepth(expanded: Expanded) {
   let maxDepth = 0
 
   Object.keys(expanded).forEach(id => {
@@ -245,12 +256,6 @@ export function findExpandedDepth(expanded) {
   })
 
   return maxDepth
-}
-
-export function composeDecorate(fns) {
-  return (...args) => {
-    fns.filter(Boolean).forEach(fn => fn(...args))
-  }
 }
 
 export function getLeafHeaders(originalHeader: Header) {
@@ -267,8 +272,14 @@ export function getLeafHeaders(originalHeader: Header) {
   return leafHeaders
 }
 
-export function useLazyMemo(fn, deps = []) {
-  const ref = React.useRef({ deps: [] })
+export function useLazyMemo<T extends (...any: any[]) => any>(
+  fn: T,
+  deps: any[] = []
+) {
+  const ref = React.useRef<{ deps: any[]; result: ReturnType<T> }>({
+    deps: [],
+    result: null as ReturnType<T>,
+  })
 
   return React.useCallback(() => {
     if (
@@ -283,7 +294,7 @@ export function useLazyMemo(fn, deps = []) {
   }, [deps, fn])
 }
 
-export function applyDefaults(obj, defaults) {
+export function applyDefaults(obj: any, defaults: any) {
   const newObj = { ...obj }
 
   Object.keys(defaults).forEach(key => {
@@ -295,7 +306,11 @@ export function applyDefaults(obj, defaults) {
   return newObj
 }
 
-export function buildHeaderGroups(originalColumns, leafColumns, { instance }) {
+export function buildHeaderGroups(
+  originalColumns: TableColumn[],
+  leafColumns: TableColumn[],
+  { instance }: { instance: TableInstance }
+) {
   // Find the max depth of the columns:
   // build the leaf column row
   // build each buffer row going up
@@ -304,7 +319,7 @@ export function buildHeaderGroups(originalColumns, leafColumns, { instance }) {
 
   let maxDepth = 0
 
-  const findMaxDepth = (columns, depth = 0) => {
+  const findMaxDepth = (columns: TableColumn[], depth = 0) => {
     maxDepth = Math.max(maxDepth, depth)
 
     columns.forEach(column => {
@@ -319,25 +334,25 @@ export function buildHeaderGroups(originalColumns, leafColumns, { instance }) {
 
   findMaxDepth(originalColumns)
 
-  const headerGroups = []
+  const headerGroups: HeaderGroup[] = []
 
-  const makeHeaderGroup = (headers, depth) => {
+  const makeHeaderGroup = (headers: Header[], depth: number) => {
     // The header group we are creating
-    const headerGroup = {
+    const headerGroup: Partial<HeaderGroup> = {
       depth,
       id: depth,
       headers: [],
     }
 
     // The parent columns we're going to scan next
-    const parentHeaders = []
+    const parentHeaders: Header[] = []
 
     // Scan each column for parents
     headers.forEach(header => {
       // What is the latest (last) parent column?
       const latestParentHeader = [...parentHeaders].reverse()[0]
 
-      const parentHeader = {
+      const parentHeader: Partial<Header> = {
         subHeaders: [],
       }
 
@@ -361,8 +376,8 @@ export function buildHeaderGroups(originalColumns, leafColumns, { instance }) {
         !latestParentHeader ||
         latestParentHeader.column !== parentHeader.column
       ) {
-        parentHeader.subHeaders.push(header)
-        parentHeaders.push(parentHeader)
+        parentHeader.subHeaders!.push(header)
+        parentHeaders.push(parentHeader as Header)
       } else {
         latestParentHeader.subHeaders.push(header)
       }
@@ -375,10 +390,10 @@ export function buildHeaderGroups(originalColumns, leafColumns, { instance }) {
         .filter(Boolean)
         .join('_')
 
-      headerGroup.headers.push(header)
+      headerGroup.headers?.push(header)
     })
 
-    headerGroups.push(headerGroup)
+    headerGroups.push(headerGroup as HeaderGroup)
 
     if (depth > 0) {
       makeHeaderGroup(parentHeaders, depth - 1)
@@ -390,36 +405,36 @@ export function buildHeaderGroups(originalColumns, leafColumns, { instance }) {
     isPlaceholder: false,
   }))
 
-  makeHeaderGroup(bottomHeaders, maxDepth)
+  makeHeaderGroup(bottomHeaders as Header[], maxDepth)
 
   headerGroups.reverse()
 
   headerGroups.forEach(headerGroup => {
     headerGroup.getHeaderGroupProps = (props = {}) =>
-      instance.plugs.reduceHeaderGroupProps(
+      instance.plugs.reduceHeaderGroupProps?.(
         {
           key: headerGroup.id,
           role: 'row',
           ...props,
         },
         { instance, headerGroup }
-      )
+      ) ?? {}
 
     headerGroup.getFooterGroupProps = (props = {}) =>
-      instance.plugs.reduceFooterGroupProps(
+      instance.plugs.reduceFooterGroupProps?.(
         {
           key: headerGroup.id,
           role: 'row',
           ...props,
         },
         { instance, headerGroup }
-      )
+      ) ?? {}
   })
 
   return headerGroups
 }
 
-export function recurseHeaderForSpans(header) {
+export function recurseHeaderForSpans(header: Header) {
   let colSpan = 0
   let rowSpan = 1
   let childRowSpans = [0]
@@ -446,7 +461,8 @@ export function recurseHeaderForSpans(header) {
   return [colSpan, rowSpan]
 }
 
-let passiveSupported = null
+let passiveSupported: boolean | null = null
+
 export function passiveEventSupported() {
   // memoize support to avoid adding multiple test events
   if (typeof passiveSupported === 'boolean') return passiveSupported
@@ -460,8 +476,8 @@ export function passiveEventSupported() {
       },
     }
 
-    window.addEventListener('test', null, options)
-    window.removeEventListener('test', null, options)
+    window.addEventListener('test', noop, options)
+    window.removeEventListener('test', noop)
   } catch (err) {
     supported = false
   }

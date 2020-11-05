@@ -100,17 +100,17 @@ export default function useDataModel(instance: TableInstance) {
           value,
         })
 
-        instance.plugs.decorateCell(cell, { instance })
+        instance.plugs.decorateCell?.(cell, { instance })
 
         return cell
       })
 
       row.getVisibleCells = () =>
         leafColumns.map(column =>
-          row.cells.find(cell => cell.column.id === column.id)
+          row.cells?.find(cell => cell.column.id === column.id)
         ) as Cell[]
 
-      instance.plugs.decorateRow(row, { instance })
+      instance.plugs.decorateRow?.(row, { instance })
     }
   }, [debug, data, getRowId, getSubRows, leafColumns, instance])
 

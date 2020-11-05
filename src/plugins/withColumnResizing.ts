@@ -38,9 +38,7 @@ const useReduceOptions: UseReduceOptions = options => {
 
 const useInstanceAfterState: UseInstanceAfterState = instance => {
   instance.setColumnResizing = React.useCallback(
-    updater => {
-      instance.options.onColumnResizingChange?.(updater, instance)
-    },
+    updater => instance.options.onColumnResizingChange?.(updater, instance),
     [instance]
   )
 

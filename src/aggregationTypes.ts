@@ -1,4 +1,6 @@
-export function sum(values, aggregatedValues) {
+import { AggregationFn } from './types'
+
+export const sum: AggregationFn = (_, aggregatedValues) => {
   // It's faster to just add the aggregations together instead of
   // process leaf nodes individually
   return aggregatedValues.reduce(
@@ -7,7 +9,7 @@ export function sum(values, aggregatedValues) {
   )
 }
 
-export function min(values) {
+export const min: AggregationFn = values => {
   let min = 0
 
   values.forEach(value => {
@@ -19,7 +21,7 @@ export function min(values) {
   return min
 }
 
-export function max(values) {
+export const max: AggregationFn = values => {
   let max = 0
 
   values.forEach(value => {
@@ -31,7 +33,7 @@ export function max(values) {
   return max
 }
 
-export function minMax(values) {
+export const minMax: AggregationFn = values => {
   let min = 0
   let max = 0
 
@@ -45,11 +47,11 @@ export function minMax(values) {
   return `${min}..${max}`
 }
 
-export function average(values) {
-  return sum(null, values) / values.length
+export const average: AggregationFn = values => {
+  return sum([], values) / values.length
 }
 
-export function median(values) {
+export const median: AggregationFn = values => {
   if (!values.length) {
     return null
   }
@@ -67,14 +69,14 @@ export function median(values) {
   return (min + max) / 2
 }
 
-export function unique(values) {
-  return [...new Set(values).values()]
+export const unique: AggregationFn = values => {
+  return Array.from(new Set(values).values())
 }
 
-export function uniqueCount(values) {
+export const uniqueCount: AggregationFn = values => {
   return new Set(values).size
 }
 
-export function count(values) {
+export const count: AggregationFn = values => {
   return values.length
 }

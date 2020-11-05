@@ -1,8 +1,7 @@
-import React from 'react'
+import React, { MouseEvent, TouchEvent } from 'react'
 
 import {
   flattenBy,
-  groupBy,
   useMountedLayoutEffect,
   makeRenderer,
   makeStateUpdater,
@@ -15,29 +14,30 @@ import {
   withGlobalFilter,
 } from '../Constants'
 
-import * as aggregationTypes from '../aggregationTypes'
+import * as _aggregationTypes from '../aggregationTypes'
+import {
+  AggregationFn,
+  Cell,
+  ColumnId,
+  DecorateCell,
+  DecorateColumn,
+  Row,
+  RowId,
+  UseInstanceAfterDataModel,
+  UseInstanceAfterState,
+  UseReduceLeafColumns,
+  UseReduceOptions,
+  TableColumn,
+  DecorateRow,
+} from '../types'
 
-const emptyArray = []
+const aggregationTypes: Record<string, AggregationFn> = _aggregationTypes
+const emptyArray: [] = []
 const emptyObject = {}
 
-export const withGrouping = {
-  name,
-  after: [withColumnVisibility, withColumnFilters, withGlobalFilter],
-  plugs: {
-    useReduceOptions,
-    useInstanceAfterState,
-    useInstanceAfterDataModel,
-    useReduceLeafColumns,
-    decorateColumn,
-    decorateRow,
-    decorateCell,
-  },
-}
-
-function useReduceOptions(options) {
+const useReduceOptions: UseReduceOptions = options => {
   return {
     onGroupingChange: React.useCallback(makeStateUpdater('grouping'), []),
-    aggregationTypes: {},
     manualGrouping: false,
     autoResetGrouping: true,
     ...options,
@@ -48,13 +48,18 @@ function useReduceOptions(options) {
   }
 }
 
-function useInstanceAfterState(instance) {
+const useInstanceAfterState: UseInstanceAfterState = instance => {
+  instance.setGrouping = React.useCallback(
+    updater => instance.options.onGroupingChange?.(updater, instance),
+    [instance]
+  )
+
   const groupingResetDeps = [
     instance.options.manualGrouping ? null : instance.options.data,
   ]
   React.useMemo(() => {
     if (instance.options.autoResetGrouping) {
-      instance.state.grouping = instance.options.initialState.grouping
+      instance.state.grouping = instance.options.initialState?.grouping
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, groupingResetDeps)
@@ -65,33 +70,23 @@ function useInstanceAfterState(instance) {
     }
   }, groupingResetDeps)
 
-  instance.setGrouping = React.useCallback(
-    updater => {
-      instance.options.onGroupingChange(updater, instance)
-    },
-    [instance]
-  )
-
   instance.toggleColumnGrouping = React.useCallback(
     (columnId, value) => {
-      instance.setGrouping(old => {
-        value =
-          typeof value !== 'undefined'
-            ? value
-            : !old.grouping.includes(columnId)
+      instance.setGrouping((old = []) => {
+        value = typeof value !== 'undefined' ? value : !old.includes(columnId)
 
         if (value) {
-          return [...old.grouping, columnId]
+          return [...old, columnId]
         }
 
-        return old.grouping.filter(d => d !== columnId)
+        return old.filter(d => d !== columnId)
       })
     },
     [instance]
   )
 
   instance.resetGrouping = React.useCallback(
-    () => instance.setGrouping(instance.options.initialState.grouping),
+    () => instance.setGrouping(instance.options.initialState?.grouping ?? []),
     [instance]
   )
 
@@ -106,7 +101,7 @@ function useInstanceAfterState(instance) {
       return (
         (instance.options.disableGrouping ? false : undefined) ??
         (column.disableGrouping ? false : undefined) ??
-        column.defaultCanGrouping ??
+        column.defaultCanGroup ??
         !!column.accessor
       )
     },
@@ -114,20 +109,22 @@ function useInstanceAfterState(instance) {
   )
 
   instance.getColumnIsGrouped = React.useCallback(
-    columnId => instance.state.grouping.includes(columnId),
+    columnId => instance.state.grouping?.includes(columnId) ?? false,
     [instance.state.grouping]
   )
 
   instance.getColumnGroupedIndex = React.useCallback(
-    columnId => instance.state.grouping.indexOf(columnId),
+    columnId => instance.state.grouping?.indexOf(columnId) ?? -1,
     [instance.state.grouping]
   )
+
+  return instance
 }
 
-function useInstanceAfterDataModel(instance) {
+const useInstanceAfterDataModel: UseInstanceAfterDataModel = instance => {
   const {
     options: { manualGrouping },
-    state: { grouping },
+    state: { grouping = [] },
     leafColumns,
     rows,
     flatRows,
@@ -165,8 +162,12 @@ function useInstanceAfterDataModel(instance) {
 
     // Find the columns that can or are aggregating
     // Uses each column to aggregate rows into a single value
-    const aggregateRowsToValues = (leafRows, groupedRows, depth) => {
-      const values = {}
+    const aggregateRowsToValues = (
+      leafRows: Row[],
+      groupedRows: Row[],
+      depth: number
+    ) => {
+      const values: Record<ColumnId, any> = {}
 
       leafColumns.forEach(column => {
         // Don't aggregate columns that are in the grouping
@@ -178,11 +179,11 @@ function useInstanceAfterDataModel(instance) {
         }
 
         // Aggregate the values
-        let aggregateFn =
+        const aggregateFn: AggregationFn =
           typeof column.aggregate === 'function'
             ? column.aggregate
-            : instance.options.aggregationTypes[column.aggregate] ||
-              aggregationTypes[column.aggregate]
+            : instance.options.aggregationTypes[column.aggregate ?? ''] ??
+              aggregationTypes[column.aggregate ?? '']
 
         if (aggregateFn) {
           // Get the columnValues to aggregate
@@ -192,24 +193,10 @@ function useInstanceAfterDataModel(instance) {
           const leafValues = leafRows.map(row => {
             let columnValue = row.values[column.id]
 
-            if (!depth && column.aggregatedValue) {
-              const aggregateValueFn =
-                typeof column.aggregateValue === 'function'
-                  ? column.aggregateValue
-                  : instance.options.aggregationTypes[column.aggregateValue] ||
-                    aggregationTypes[column.aggregateValue]
-
-              if (!aggregateValueFn) {
-                console.info({ column })
-                throw new Error(
-                  process.env.NODE_ENV !== 'production'
-                    ? `React Table: Invalid column.aggregateValue option for column listed above`
-                    : ''
-                )
-              }
-
-              columnValue = aggregateValueFn(columnValue, row, column)
+            if (!depth && column.aggregateValue) {
+              columnValue = column.aggregateValue(columnValue, row, column)
             }
+
             return columnValue
           })
 
@@ -229,15 +216,15 @@ function useInstanceAfterDataModel(instance) {
       return values
     }
 
-    let groupedFlatRows = []
-    const groupedRowsById = {}
-    const onlyGroupedFlatRows = []
-    const onlyGroupedRowsById = {}
-    const nonGroupedFlatRows = []
-    const nonGroupedRowsById = {}
+    const groupedFlatRows: Row[] = []
+    const groupedRowsById: Record<RowId, Row> = {}
+    const onlyGroupedFlatRows: Row[] = []
+    const onlyGroupedRowsById: Record<RowId, Row> = {}
+    const nonGroupedFlatRows: Row[] = []
+    const nonGroupedRowsById: Record<RowId, Row> = {}
 
     // Recursively group the data
-    const groupUpRecursively = (rows, depth = 0, parentId) => {
+    const groupUpRecursively = (rows: Row[], depth = 0, parentId: RowId) => {
       // This is the last level, just return the rows
       if (depth === existingGrouping.length) {
         return rows
@@ -246,7 +233,7 @@ function useInstanceAfterDataModel(instance) {
       const columnId = existingGrouping[depth]
 
       // Group the rows together for this level
-      let rowGroupsMap = groupBy(rows, columnId)
+      const rowGroupsMap = groupBy(rows, columnId)
 
       // Peform aggregations for each group
       const aggregatedGroupedRows = Object.entries(rowGroupsMap).map(
@@ -259,12 +246,12 @@ function useInstanceAfterDataModel(instance) {
 
           // Flatten the leaf rows of the rows in this group
           const leafRows = depth
-            ? flattenBy(groupedRows, 'leafRows')
+            ? flattenBy<Row[], Row[]>(groupedRows, 'leafRows')
             : groupedRows
 
           const values = aggregateRowsToValues(leafRows, groupedRows, depth)
 
-          const row = {
+          const row: Row = {
             id,
             groupingId: columnId,
             groupingVal,
@@ -278,7 +265,7 @@ function useInstanceAfterDataModel(instance) {
           subRows.forEach(subRow => {
             groupedFlatRows.push(subRow)
             groupedRowsById[subRow.id] = subRow
-            if (subRow.getIsGrouped()) {
+            if (subRow.getIsGrouped?.()) {
               onlyGroupedFlatRows.push(subRow)
               onlyGroupedRowsById[subRow.id] = subRow
             } else {
@@ -290,9 +277,9 @@ function useInstanceAfterDataModel(instance) {
           row.cells = []
 
           row.cells = leafColumns.map(column => {
-            let value = row.values[column.id]
+            const value = row.values[column.id]
 
-            const cell = {
+            const cell: Cell = {
               id: column.id,
               row,
               column,
@@ -306,17 +293,17 @@ function useInstanceAfterDataModel(instance) {
               value,
             })
 
-            instance.plugs.decorateCell(cell, { instance })
+            instance.plugs.decorateCell?.(cell, { instance })
 
             return cell
           })
 
           row.getVisibleCells = () =>
             instance.leafColumns.map(column =>
-              row.cells.find(cell => cell.column.id === column.id)
-            )
+              row.cells?.find(cell => cell.column.id === column.id)
+            ) as Cell[]
 
-          instance.plugs.decorateRow(row, { instance })
+          instance.plugs.decorateRow?.(row, { instance })
 
           return row
         }
@@ -325,12 +312,12 @@ function useInstanceAfterDataModel(instance) {
       return aggregatedGroupedRows
     }
 
-    const groupedRows = groupUpRecursively(rows)
+    const groupedRows = groupUpRecursively(rows, 0, '')
 
     groupedRows.forEach(subRow => {
       groupedFlatRows.push(subRow)
       groupedRowsById[subRow.id] = subRow
-      if (subRow.getIsGrouped()) {
+      if (subRow.getIsGrouped?.()) {
         onlyGroupedFlatRows.push(subRow)
         onlyGroupedRowsById[subRow.id] = subRow
       } else {
@@ -374,15 +361,18 @@ function useInstanceAfterDataModel(instance) {
     flatRows: groupedFlatRows,
     rowsById: groupedRowsById,
   })
+
+  return instance
 }
 
-function useReduceLeafColumns(orderedColumns, { instance }) {
-  const {
-    state: { grouping },
-  } = instance
-
+const useReduceLeafColumns: UseReduceLeafColumns = (
+  orderedColumns,
+  { instance }
+) => {
   return React.useMemo(() => {
-    if (!grouping.length) {
+    const grouping = instance.state.grouping
+
+    if (!grouping?.length) {
       return orderedColumns
     }
 
@@ -390,7 +380,7 @@ function useReduceLeafColumns(orderedColumns, { instance }) {
 
     const groupingColumns = grouping
       .map(g => orderedColumns.find(col => col.id === g))
-      .filter(Boolean)
+      .filter(Boolean) as TableColumn[]
 
     const nonGroupingColumns = orderedColumns.filter(
       col => !grouping.includes(col.id)
@@ -401,10 +391,10 @@ function useReduceLeafColumns(orderedColumns, { instance }) {
     }
 
     return nonGroupingColumns
-  }, [grouping, orderedColumns])
+  }, [instance.state.grouping, orderedColumns])
 }
 
-function decorateColumn(column, { instance }) {
+const decorateColumn: DecorateColumn = (column, { instance }) => {
   column.Aggregated = column.Aggregated || column.Cell
 
   column.getCanGroup = () => instance.getColumnCanGroup(column.id)
@@ -413,33 +403,67 @@ function decorateColumn(column, { instance }) {
   column.toggleGrouping = value =>
     instance.toggleColumnGrouping(column.id, value)
   column.getToggleGroupingProps = (props = {}) => {
-    const canGroup = column.getCanGroup()
+    const canGroup = column.getCanGroup?.()
 
     return {
       onClick: canGroup
-        ? e => {
+        ? (e: MouseEvent | TouchEvent) => {
             e.persist()
-            column.toggleGrouping()
+            column.toggleGrouping?.()
           }
         : undefined,
       title: 'Toggle Grouping',
       ...props,
     }
   }
+
+  return column
 }
 
-function decorateRow(row) {
+const decorateRow: DecorateRow = row => {
   row.getIsGrouped = () => !!row.groupingId
+
+  return row
 }
 
-function decorateCell(cell) {
+const decorateCell: DecorateCell = cell => {
   // Grouped cells are in the grouping and the pivot cell for the row
   cell.getIsGrouped = () =>
-    cell.column.getIsGrouped() && cell.column.id === cell.row.groupingId
+    (cell.column.getIsGrouped?.() && cell.column.id === cell.row.groupingId) ??
+    false
   // Placeholder cells are any columns in the grouping that are not grouped
   cell.getIsPlaceholder = () =>
-    !cell.getIsGrouped() && cell.column.getIsGrouped()
+    (!cell.getIsGrouped?.() && cell.column.getIsGrouped?.()) ?? false
   // Aggregated cells are not grouped, not repeated, but still have subRows
   cell.getIsAggregated = () =>
-    !cell.getIsGrouped() && !cell.getIsPlaceholder() && cell.row.getCanExpand()
+    (!cell.getIsGrouped?.() &&
+      !cell.getIsPlaceholder?.() &&
+      cell.row.getCanExpand?.()) ??
+    false
+
+  return cell
+}
+
+function groupBy(rows: Row[], columnId: ColumnId) {
+  const map: Record<any, Row[]> = {}
+  return rows.reduce((prev, row) => {
+    const resKey = `${row.values[columnId]}`
+    prev[resKey] = Array.isArray(prev[resKey]) ? prev[resKey] : []
+    prev[resKey].push(row)
+    return prev
+  }, map)
+}
+
+export const withGrouping = {
+  name,
+  after: [withColumnVisibility, withColumnFilters, withGlobalFilter],
+  plugs: {
+    useReduceOptions,
+    useInstanceAfterState,
+    useInstanceAfterDataModel,
+    useReduceLeafColumns,
+    decorateColumn,
+    decorateRow,
+    decorateCell,
+  },
 }

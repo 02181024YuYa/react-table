@@ -5,7 +5,7 @@ import { flattenColumns, makeRenderer } from '../utils'
 
 export const defaultColumn: Partial<TableColumn> = {
   Header: () => <>&nbsp;</>,
-  Cell: ({ value = '' }: { value: unknown }) =>
+  Cell: ({ value = '' }: { value: any }): JSX.Element =>
     typeof value === 'boolean' ? value.toString() : value,
   defaultIsVisible: true,
   width: 150,
@@ -14,11 +14,6 @@ export const defaultColumn: Partial<TableColumn> = {
 }
 
 export default function useColumns(instance: TableInstance) {
-  const {
-    options: { columns },
-    plugs: { useReduceColumns, useReduceAllColumns, useReduceLeafColumns },
-  } = instance
-
   const prepColumn = (column: TableColumn) => {
     if (column.prepared) {
       return
@@ -67,8 +62,8 @@ export default function useColumns(instance: TableInstance) {
     if (process.env.NODE_ENV !== 'production' && instance.options.debug)
       console.info('Building Columns...')
 
-    if (columns) {
-      return recurseColumns(columns)
+    if (instance.options.columns) {
+      return recurseColumns(instance.options.columns)
     }
 
     return []
@@ -96,18 +91,22 @@ export default function useColumns(instance: TableInstance) {
         return tableColumn
       })
     }
-  }, [columns, instance.options.debug])
+  }, [instance.options.columns, instance.options.debug])
 
-  instance.columns = useReduceColumns(instance.columns, { instance })
+  instance.columns =
+    instance.plugs.useReduceColumns?.(instance.columns, {
+      instance,
+    }) ?? []
 
   instance.allColumns = React.useMemo(
     () => flattenColumns(instance.columns, true),
     [instance.columns]
   )
 
-  instance.allColumns = useReduceAllColumns(instance.allColumns, {
-    instance,
-  })
+  instance.allColumns =
+    instance.plugs.useReduceAllColumns?.(instance.allColumns, {
+      instance,
+    }) ?? []
 
   instance.allColumns = React.useMemo(() => {
     return instance.allColumns.map(column => {
@@ -123,7 +122,7 @@ export default function useColumns(instance: TableInstance) {
 
   instance.allColumns.forEach(column => {
     prepColumn(column)
-    instance.plugs.decorateColumn(column, { instance })
+    instance.plugs.decorateColumn?.(column, { instance })
   })
 
   instance.leafColumns = React.useMemo(
@@ -134,9 +133,10 @@ export default function useColumns(instance: TableInstance) {
     [instance.allColumns]
   )
 
-  instance.leafColumns = useReduceLeafColumns(instance.leafColumns, {
-    instance,
-  })
+  instance.leafColumns =
+    instance.plugs.useReduceLeafColumns?.(instance.leafColumns, {
+      instance,
+    }) ?? []
 
   // Check for duplicate columns
   if (process.env.NODE_ENV !== 'production') {

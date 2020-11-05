@@ -64,6 +64,57 @@ export interface TableOptions {
   autoResetExpanded?: boolean
   manualExpanding?: boolean
   manualExpandedKey?: string
+  expandSubRows?: boolean
+
+  // withGlobalFilter
+  manualGlobalFilter?: boolean
+  autoResetGlobalFilter?: boolean
+
+  // withGrouping
+  onGroupingChange?: (
+    updater: Updater<TableState['grouping']>,
+    instance: TableInstance
+  ) => void
+  manualGrouping?: boolean
+  autoResetGrouping?: boolean
+  disableGrouping?: boolean
+  aggregationTypes: Record<string, AggregationFn>
+
+  // withGlobalFilter
+  onGlobalFilterChange?: (
+    updater: Updater<TableState['globalFilter']>,
+    instance: TableInstance
+  ) => void
+  globalFilterType?: FilterType
+  disableGlobalFilter?: boolean
+
+  // withPagination
+  onPageIndexChange?: (
+    updater: Updater<TableState['pageIndex']>,
+    instance: TableInstance
+  ) => void
+  onPageSizeChange?: (
+    updater: Updater<TableState['pageSize']>,
+    instance: TableInstance
+  ) => void
+  onPageCountChange?: (
+    updater: Updater<TableState['pageCount']>,
+    instance: TableInstance
+  ) => void
+  manualPagination?: boolean
+  autoResetPageIndex?: boolean
+
+  // withRowSelection
+  onRowSelectionChange?: (
+    updater: Updater<TableState['rowSelection']>,
+    instance: TableInstance
+  ) => void
+  autoResetRowSelection?: boolean
+  selectSubRows?: boolean
+  selectGroupingRows?: boolean
+  manualRowSelectedKey?: string
+  isAdditiveSelectEvent?: (e: any) => boolean
+  isInclusiveSelectEvent?: (e: any) => boolean
 
   // withSorting
   onSortingChange?: (
@@ -128,9 +179,9 @@ export interface TableInstance {
   getColumnCanPin: (columnId: ColumnId) => boolean
   getColumnIsPinned: (columnId: ColumnId) => ColumnPinningStatus
   getColumnPinnedIndex: (columnId: ColumnId) => number
-  centerLeafColumns: Column[]
-  leftLeafColumns: Column[]
-  rightLeafColumns: Column[]
+  centerLeafColumns: TableColumn[]
+  leftLeafColumns: TableColumn[]
+  rightLeafColumns: TableColumn[]
   centerHeaderGroups: HeaderGroup[]
   leftHeaderGroups: HeaderGroup[]
   rightHeaderGroups: HeaderGroup[]
@@ -163,6 +214,54 @@ export interface TableInstance {
   toggleRowExpanded: (rowId: RowId, value?: boolean) => void
   toggleAllRowsExpanded: (value?: boolean) => void
   getToggleAllRowsExpandedProps: (userProps?: any) => ToggleAllRowsExpandedProps
+
+  // withGrouping
+  setGrouping: (updater: Updater<TableState['grouping']>) => void
+  resetGrouping: () => void
+  toggleColumnGrouping: (columnId: ColumnId, value?: boolean) => void
+  getColumnCanGroup: (columnId: ColumnId) => boolean
+  getColumnIsGrouped: (columnId: ColumnId) => boolean
+  getColumnGroupedIndex: (columnId: ColumnId) => number
+  nonGroupedRowsById: Record<RowId, Row>
+
+  // withGlobalFilter
+  setGlobalFilter?: (updater: Updater<TableState['globalFilter']>) => void
+  resetGlobalFilter?: () => void
+  getCanGlobalFilterColumn?: (columnId: ColumnId) => boolean
+
+  // withPagination
+  setPageIndex?: (updater: Updater<TableState['pageIndex']>) => void
+  setPageSize?: (updater: Updater<TableState['pageSize']>) => void
+  setPageCount?: (updater: Updater<TableState['pageCount']>) => void
+  resetPageIndex?: () => void
+  resetPageSize?: () => void
+  resetPageCount?: () => void
+  getPageCount?: () => number
+  getPageOptions?: () => number[]
+  getPageRows?: () => Row[]
+  getCanPreviousPage?: () => boolean
+  getCanNextPage?: () => boolean
+  gotoPreviousPage?: () => void
+  gotoNextPage?: () => void
+
+  // withRowSelection
+  setRowSelection?: (updater: Updater<TableState['rowSelection']>) => void
+  resetRowSelection?: () => void
+  toggleAllRowsSelected?: (value?: boolean) => void
+  toggleAllPageRowsSelected?: (value?: boolean) => void
+  toggleRowSelected?: (rowId: RowId, value?: boolean) => void
+  addRowSelectionRange?: (rowId: RowId) => void
+  getSelectedFlatRows?: () => Row[]
+  getIsAllRowsSelected?: () => boolean
+  getIsAllPageRowsSelected?: () => boolean
+  getIsSomeRowsSelected?: () => false | number
+  getIsSomePageRowsSelected?: () => false | number
+  getToggleAllRowsSelectedProps?: (
+    userProps?: any
+  ) => ToggleAllRowsSelectedProps
+  getToggleAllPageRowsSelectedProps?: (
+    userProps?: any
+  ) => ToggleAllPageRowsSelectedProps
 
   // withSorting
   setSorting: (updater: Updater<TableState['sorting']>) => void
@@ -197,27 +296,45 @@ export interface TableState {
   columnResizing?: ColumnResizing
   columnVisibility?: ColumnVisibility
   expanded?: Expanded
+  grouping?: Grouping
+  globalFilter?: any
+  pageIndex?: number
+  pageSize?: number
+  pageCount?: number
+  rowSelection?: Record<RowId, boolean>
   sorting?: SortObj[]
 }
 
 export interface Row<T = any> {
   id: RowId
   subRows: Row[]
-  getRowProps: (userProps?: any) => RowProps
-  original: T
   index: number
   depth: number
   values: RowValues
-  originalSubRows: T[]
   leafRows: Row[]
-  cells: Cell[]
-  getVisibleCells: () => Cell[]
+  getRowProps?: (userProps?: any) => RowProps
+  original?: T
+  originalSubRows?: T[]
+  cells?: Cell[]
+  getVisibleCells?: () => Cell[]
 
   // withExpanding
   toggleExpanded?: (value?: boolean) => void
   getIsExpanded?: () => boolean
   getCanExpand?: () => boolean
   getToggleExpandedProps?: (userProps?: any) => ToggleExpandedProps
+
+  // withGrouping
+  groupingId?: ColumnId
+  groupingVal?: any
+  getIsGrouped?: () => boolean
+
+  // withRowSelection
+  getIsSelected?: () => boolean | 'some'
+  getIsSomeSelected?: () => boolean
+  toggleSelected?: (value?: boolean) => void
+  getToggleRowSelectedProps?: (userProps?: any) => ToggleExpandedProps
+  getProps?: (userProps?: any) => ToggleExpandedProps
 }
 
 export interface RowValues {
@@ -225,10 +342,10 @@ export interface RowValues {
 }
 
 export interface Column {
-  Header?: unknown | ((...any: any) => JSX.Element)
+  Header?: JSX.Element | ((...any: any[]) => JSX.Element)
   accessor?: string | ((originalRow: any, index: number, row: Row) => unknown)
   id?: ColumnId
-  Cell?: unknown | ((...any: any) => JSX.Element)
+  Cell?: JSX.Element | ((...any: any[]) => JSX.Element)
   defaultIsVisible?: boolean
   width?: number
   minWidth?: number
@@ -264,6 +381,20 @@ export interface Column {
   // withExpanding
   isExpanderColumn?: boolean
 
+  // withGrouping
+  disableGrouping?: boolean
+  defaultCanGroup?: boolean
+  aggregate?: AggregationType
+  aggregateValue?: AggregateValueFn
+  Aggregated?: JSX.Element | ((...any: any[]) => JSX.Element)
+
+  // withGlobalFilter
+  disableGlobalFilter?: boolean
+  defaultCanGlobalFilter?: boolean
+
+  // withRowSelection
+  isRowSelectionColumn?: boolean
+
   // withColumnPinning
   disablePinning?: boolean
 }
@@ -278,6 +409,7 @@ export interface TableColumn extends Column {
   render?: (Comp?: any, props?: any) => JSX.Element | null
   getWidth?: () => number
   columns?: TableColumn[]
+  header?: Header
 
   // withSorting
   sortInverted?: boolean
@@ -310,6 +442,13 @@ export interface TableColumn extends Column {
   toggleVisibility?: (value?: boolean) => void
   getToggleVisibilityProps?: (userProps?: any) => ToggleColumnVisibilityProps
 
+  // withGrouping
+  getCanGroup?: () => boolean
+  getGroupedIndex?: () => number
+  getIsGrouped?: () => boolean
+  toggleGrouping?: (value?: boolean) => void
+  getToggleGroupingProps?: (userProps?: any) => ToggleGroupingProps
+
   // withColumnPinning
   getCanPin?: () => boolean
   getPinnedIndex?: () => number
@@ -321,11 +460,16 @@ type MinMaxValue = number | string
 
 export interface Cell {
   id: CellId
-  getCellProps: (userProps?: any) => CellProps
   row: Row
   column: TableColumn
   value: any
-  render: (Comp?: any, props?: any) => JSX.Element | null
+  render?: (Comp?: any, props?: any) => JSX.Element | null
+  getCellProps?: (userProps?: any) => CellProps
+
+  // withGrouping
+  getIsGrouped?: () => boolean
+  getIsPlaceholder?: () => boolean
+  getIsAggregated?: () => boolean
 }
 
 export interface Plugin {
@@ -336,17 +480,24 @@ export interface Plugin {
 
 export interface Header extends TableColumn {
   isPlaceholder: boolean
+  placeholderId: ColumnId
   column: TableColumn
   getHeaderProps: (userProps?: any) => HeaderProps
   getFooterProps: (userProps?: any) => FooterProps
   getWidth: () => number
   subHeaders: Header[]
+  colSpan: number
+  rowSpan: number
 }
 
 export interface Footer extends Header {}
 
 export interface HeaderGroup {
+  id: ColumnId
+  depth: number
   headers: Header[]
+  getHeaderGroupProps: (userProps?: any) => HeaderProps
+  getFooterGroupProps: (userProps?: any) => FooterProps
 }
 export interface FooterGroup {
   footers: Footer[]
@@ -428,11 +579,14 @@ export type ReduceTableFooterProps = (
 ) => TableFooterProps
 export type ReduceHeaderGroupProps = (
   headerGroupProps: HeaderGroupProps,
-  { instance }: { instance: TableInstance }
+  { instance }: { instance: TableInstance; headerGroup: HeaderGroup }
 ) => HeaderGroupProps
 export type ReduceFooterGroupProps = (
   footerGroupProps: FooterGroupProps,
-  { instance, header }: { instance: TableInstance; header: Header }
+  {
+    instance,
+    headerGroup,
+  }: { instance: TableInstance; headerGroup: HeaderGroup }
 ) => FooterGroupProps
 export type ReduceHeaderProps = (
   headerProps: HeaderProps,
@@ -511,7 +665,7 @@ export interface ColumnFilter {
 
 export interface FilterFn {
   (rows: Row[], columnIds: ColumnId[], filterValue: any): Row[]
-  autoRemove?: (filterValue: any, column: TableColumn) => boolean
+  autoRemove?: (filterValue: any, column?: TableColumn) => boolean
 }
 
 // withColumnPinning
@@ -568,6 +722,47 @@ export interface ToggleAllRowsExpandedProps {
 }
 
 export interface ToggleExpandedProps {
+  onClick?: any
+  title?: string
+}
+
+// withGrouping
+
+export type Grouping = ColumnId[]
+
+export type AggregationFn = (values: any[], aggregatedValues: any[]) => any
+
+export type AggregationType =
+  | 'sum'
+  | 'min'
+  | 'max'
+  | 'minMax'
+  | 'average'
+  | 'median'
+  | 'unique'
+  | 'uniqueCount'
+  | 'count'
+  | string
+  | AggregationFn
+
+export type AggregateValueFn = (
+  value: any,
+  row: Row,
+  column: TableColumn
+) => any
+
+export interface ToggleGroupingProps {
+  onClick?: any
+  title?: string
+}
+
+// withRowSelection
+export interface ToggleAllRowsSelectedProps {
+  onClick?: any
+  title?: string
+}
+
+export interface ToggleAllPageRowsSelectedProps {
   onClick?: any
   title?: string
 }

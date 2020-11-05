@@ -72,18 +72,18 @@ const decorateHeader: DecorateHeader = (header, { instance }) => {
 
   // Give columns/headers a default getHeaderProps
   header.getHeaderProps = (props = {}) =>
-    instance.plugs.reduceHeaderProps(
+    instance.plugs.reduceHeaderProps?.(
       {
         key: header.id,
         role: 'columnheader',
         ...props,
       },
       { instance, header }
-    )
+    ) ?? {}
 
   // Give columns/headers a default getFooterProps
   header.getFooterProps = (props = {}) =>
-    instance.plugs.reduceFooterProps(
+    instance.plugs.reduceFooterProps?.(
       {
         key: header.id,
         role: 'columnfooter',
@@ -93,7 +93,7 @@ const decorateHeader: DecorateHeader = (header, { instance }) => {
         instance,
         header,
       }
-    )
+    ) ?? {}
 
   header.getWidth = () => {
     let sum = 0
@@ -119,10 +119,10 @@ const decorateRow: DecorateRow = (
   { instance }: { instance: TableInstance }
 ) => {
   row.getRowProps = (props = {}) =>
-    instance.plugs.reduceRowProps(
+    instance.plugs.reduceRowProps?.(
       { key: row.id, role: 'row', ...props },
       { instance, row }
-    )
+    ) ?? {}
 
   return row
 }
@@ -132,7 +132,7 @@ const decorateCell: DecorateCell = (
   { instance }: { instance: TableInstance }
 ) => {
   cell.getCellProps = (props = {}) =>
-    instance.plugs.reduceCellProps(
+    instance.plugs.reduceCellProps?.(
       {
         key: cell.id,
         role: 'gridcell',
@@ -142,7 +142,7 @@ const decorateCell: DecorateCell = (
         instance,
         cell,
       }
-    )
+    ) ?? {}
 
   return cell
 }
@@ -151,16 +151,19 @@ const useInstanceAfterDataModel: UseInstanceAfterDataModel = (
   instance: TableInstance
 ) => {
   instance.getTableHeadProps = (props = {}) =>
-    instance.plugs.reduceTableHeadProps({ ...props }, { instance })
+    instance.plugs.reduceTableHeadProps?.({ ...props }, { instance }) ?? {}
   instance.getTableFooterProps = (props = {}) =>
-    instance.plugs.reduceTableFooterProps({ ...props }, { instance })
+    instance.plugs.reduceTableFooterProps?.({ ...props }, { instance }) ?? {}
   instance.getTableBodyProps = (props = {}) =>
-    instance.plugs.reduceTableBodyProps(
+    instance.plugs.reduceTableBodyProps?.(
       { role: 'rowgroup', ...props },
       { instance }
-    )
+    ) ?? {}
   instance.getTableProps = (props = {}) =>
-    instance.plugs.reduceTableProps({ role: 'table', ...props }, { instance })
+    instance.plugs.reduceTableProps?.(
+      { role: 'table', ...props },
+      { instance }
+    ) ?? {}
 
   return instance
 }

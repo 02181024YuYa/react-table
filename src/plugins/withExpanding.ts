@@ -18,6 +18,7 @@ import {
 import {
   DecorateRow,
   Expanded,
+  TableColumn,
   UseInstanceAfterDataModel,
   UseInstanceAfterState,
   UseReduceLeafColumns,
@@ -40,9 +41,7 @@ const useReduceOptions: UseReduceOptions = options => {
 
 const useInstanceAfterState: UseInstanceAfterState = instance => {
   instance.setExpanded = React.useCallback(
-    updater => {
-      instance.options.onExpandedChange?.(updater, instance)
-    },
+    updater => instance.options.onExpandedChange?.(updater, instance),
     [instance]
   )
 
@@ -81,7 +80,7 @@ const useInstanceAfterState: UseInstanceAfterState = instance => {
   }, [instance.rowsById, instance.state.expanded])
 
   instance.getExpandedDepth = React.useCallback(
-    () => findExpandedDepth(instance.state.expanded),
+    () => findExpandedDepth(instance.state.expanded ?? {}),
     [instance.state.expanded]
   )
 
@@ -177,15 +176,17 @@ const useReduceLeafColumns: UseReduceLeafColumns = (
   orderedColumns,
   { instance }
 ) => {
+  const grouping = instance.state.grouping || []
+
   return React.useMemo(() => {
-    if (instance.state.grouping?.length) {
+    if (grouping.length) {
       return [
         orderedColumns.find(d => d.isExpanderColumn),
         ...orderedColumns.filter(d => d && !d.isExpanderColumn),
-      ].filter(Boolean)
+      ].filter(Boolean) as TableColumn[]
     }
     return orderedColumns
-  }, [instance.state.grouping.length, orderedColumns])
+  }, [grouping.length, orderedColumns])
 }
 
 const decorateRow: DecorateRow = (row, { instance }) => {

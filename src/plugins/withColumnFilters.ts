@@ -45,7 +45,7 @@ const useReduceOptions: UseReduceOptions = options => {
 
 const useInstanceAfterState: UseInstanceAfterState = instance => {
   instance.setColumnFilters = React.useCallback(
-    updater => {
+    updater =>
       instance.options.onColumnFiltersChange?.(old => {
         const {
           leafColumns,
@@ -71,8 +71,7 @@ const useInstanceAfterState: UseInstanceAfterState = instance => {
           }
           return true
         })
-      }, instance)
-    },
+      }, instance),
     [instance]
   )
 

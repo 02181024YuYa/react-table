@@ -13,7 +13,6 @@ import {
   withColumnOrder,
 } from '../Constants'
 import {
-  Column,
   DecorateColumn,
   UseInstanceAfterState,
   UseReduceFlatHeaders,
@@ -150,7 +149,7 @@ const useReduceLeafColumns: UseReduceLeafColumns = (
     return (
       (columnPinningLeft
         ?.map(columnId => leafColumns.find(d => d.id === columnId))
-        .filter(Boolean) as Column[]) ?? []
+        .filter(Boolean) as typeof leafColumns) ?? []
     )
   }, [columnPinningLeft, leafColumns])
 
@@ -158,7 +157,7 @@ const useReduceLeafColumns: UseReduceLeafColumns = (
     return (
       (columnPinningRight
         ?.map(columnId => leafColumns.find(d => d.id === columnId))
-        .filter(Boolean) as Column[]) ?? []
+        .filter(Boolean) as typeof leafColumns) ?? []
     )
   }, [columnPinningRight, leafColumns])
 
