@@ -11,6 +11,10 @@ import {
   UseReduceOptions,
 } from '../types'
 
+// {
+//   defaultIsVisible: boolean
+// }
+
 const useReduceOptions: UseReduceOptions = options => {
   return {
     onColumnVisibilityChange: React.useCallback(
@@ -18,6 +22,10 @@ const useReduceOptions: UseReduceOptions = options => {
       []
     ),
     ...options,
+    defaultColumn: {
+      defaultIsVisible: true,
+      ...options.defaultColumn,
+    },
     initialState: {
       columnVisibility: {},
       ...options.initialState,

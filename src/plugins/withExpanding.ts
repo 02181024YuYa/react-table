@@ -31,6 +31,7 @@ const useReduceOptions: UseReduceOptions = options => {
     manualExpandedKey: 'expanded',
     manualExpanding: false,
     expandSubRows: true,
+    paginateExpandedRows: true,
     ...options,
     initialState: {
       expanded: {},

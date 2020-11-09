@@ -22,7 +22,7 @@ export default function useHeadersAndFooters(instance: TableInstance) {
   }, [columns, instance, leafColumns])
 
   instance.headerGroups =
-    instance.plugs.useReduceHeaderGroups?.(instance.headerGroups, {
+    instance.plugs.useReduceHeaderGroups(instance.headerGroups, {
       instance,
     }) ?? []
 
@@ -36,7 +36,7 @@ export default function useHeadersAndFooters(instance: TableInstance) {
   ) as unknown) as FooterGroup[]
 
   instance.footerGroups =
-    instance.plugs.useReduceFooterGroups?.(instance.footerGroups, {
+    instance.plugs.useReduceFooterGroups(instance.footerGroups, {
       instance,
     }) ?? []
 
@@ -51,12 +51,23 @@ export default function useHeadersAndFooters(instance: TableInstance) {
   )
 
   instance.flatHeaders =
-    instance.plugs.useReduceFlatHeaders?.(instance.flatHeaders, {
+    instance.plugs.useReduceFlatHeaders(instance.flatHeaders, {
       instance,
     }) ?? []
 
   instance.flatHeaders.forEach(header => {
-    instance.plugs.decorateHeader?.(header, { instance })
+    // Give columns/headers a default getHeaderProps
+    header.getHeaderProps = (props = {}) =>
+      instance.plugs.reduceHeaderProps(props, { instance, header })
+
+    // Give columns/headers a default getFooterProps
+    header.getFooterProps = (props = {}) =>
+      instance.plugs.reduceFooterProps(props, {
+        instance,
+        header,
+      })
+
+    instance.plugs.decorateHeader(header, { instance })
   })
 
   instance.flatFooters = React.useMemo(

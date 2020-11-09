@@ -1,6 +1,8 @@
-import { useTable } from '../useTable'
-import { getHeaderIds, getRowValues } from '../../../test-utils'
+import { useTable } from '../../core/useTable'
 import { renderHook } from '@testing-library/react-hooks'
+import { getHeaderIds, getRowValues } from '../../../test-utils'
+import { withCore } from '../withCore'
+import { withTest } from '../withTest'
 
 const data = [
   {
@@ -68,17 +70,17 @@ const columns = [
 
 describe('useTable', () => {
   it('renders a basic table', () => {
-    const { result } = renderHook(
-      ({ initialValue }) => useTable(initialValue),
-      {
-        initialProps: {
-          initialValue: {
-            data,
-            columns,
-          },
+    const { result } = renderHook(() => {
+      const instance = useTable(
+        {
+          data,
+          columns,
         },
-      }
-    )
+        [withCore, withTest]
+      )
+
+      return instance
+    })
 
     expect(getHeaderIds(result.current)).toEqual([
       ['Name', 'Info'],
@@ -90,5 +92,13 @@ describe('useTable', () => {
       ['derek', 'perkins', 40, 40, 'Single', 80],
       ['joe', 'bergevin', 45, 20, 'Complicated', 10],
     ])
+
+    expect(result.current.getTableBodyProps({ custom: true })).toEqual({
+      role: 'rowgroup',
+    })
+
+    expect(
+      result.current.flatHeaders[0].getHeaderProps({ custom: true })
+    ).toEqual({})
   })
 })

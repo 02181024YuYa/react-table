@@ -36,7 +36,7 @@ export default function useDataModel(instance: TableInstance) {
       // Keep the original reference around
       const original = originalRow
 
-      const id = getRowId?.(originalRow, rowIndex, parent)
+      const id = getRowId(originalRow, rowIndex, parent)
 
       if (!id) {
         throw new Error(`getRowId expected an ID, but got ${id}`)
@@ -52,14 +52,14 @@ export default function useDataModel(instance: TableInstance) {
       } as Row
 
       // Push this row into the parentRows array
-      parentRows?.push(row)
+      parentRows.push(row)
       // Keep track of every row in a flat array
       flatRows.push(row)
       // Also keep track of every row by its ID
       rowsById[id] = row
 
       // Get the original subrows
-      row.originalSubRows = getSubRows?.(originalRow, rowIndex) ?? []
+      row.originalSubRows = getSubRows(originalRow, rowIndex) ?? []
 
       // Then recursively access them
       if (row.originalSubRows) {
@@ -79,11 +79,15 @@ export default function useDataModel(instance: TableInstance) {
 
         // If the column has an accessor, use it to get a value
         if (column.accessor) {
-          value = row.values[column.id as string] = column.accessor(
-            originalRow,
-            rowIndex,
-            row
-          )
+          if (typeof column.accessor === 'string') {
+            value = row.values[column.id as string] = row[column.accessor]
+          } else {
+            value = row.values[column.id as string] = column.accessor(
+              originalRow,
+              rowIndex,
+              row
+            )
+          }
         }
 
         const cell = {
@@ -100,17 +104,17 @@ export default function useDataModel(instance: TableInstance) {
           value,
         })
 
-        instance.plugs.decorateCell?.(cell, { instance })
+        instance.plugs.decorateCell(cell, { instance })
 
         return cell
       })
 
       row.getVisibleCells = () =>
         leafColumns.map(column =>
-          row.cells?.find(cell => cell.column.id === column.id)
+          row.cells.find(cell => cell.column.id === column.id)
         ) as Cell[]
 
-      instance.plugs.decorateRow?.(row, { instance })
+      instance.plugs.decorateRow(row, { instance })
     }
   }, [debug, data, getRowId, getSubRows, leafColumns, instance])
 

@@ -1,7 +1,9 @@
 import React from 'react'
 import { TableInstance, TableState } from '../types'
 
-export default function useTableState(instance: TableInstance) {
+export default function useTableState<TInstance extends TableInstance>(
+  instance: TInstance
+) {
   // A home for our automatic internal table state
   const [autoState, setAutoState] = React.useState(
     instance.options.initialState

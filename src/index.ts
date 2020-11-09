@@ -1,4 +1,4 @@
-export { useTable } from './hooks/useTable'
+export { useTable } from './core/useTable'
 export { withColumnVisibility } from './plugins/withColumnVisibility'
 export { withColumnOrder } from './plugins/withColumnOrder'
 export { withColumnPinning } from './plugins/withColumnPinning'

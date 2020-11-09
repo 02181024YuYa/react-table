@@ -353,7 +353,7 @@ const decorateRow: DecorateRow = (row, { instance }) => {
 
   row.toggleSelected = value => instance.toggleRowSelected?.(row.id, value)
 
-  row.getToggleRowSelectedProps = ({ forInput = false, ...props }) => {
+  row.getToggleRowSelectedProps = ({ forInput = false, ...props } = {}) => {
     const checked = row.getIsSelected?.()
 
     return {

@@ -167,7 +167,7 @@ const useInstanceAfterDataModel: UseInstanceAfterDataModel = instance => {
       groupedRows: Row[],
       depth: number
     ) => {
-      const values: Record<ColumnId, any> = {}
+      const values: Record<ColumnId, unknown> = {}
 
       leafColumns.forEach(column => {
         // Don't aggregate columns that are in the grouping
@@ -236,7 +236,7 @@ const useInstanceAfterDataModel: UseInstanceAfterDataModel = instance => {
       const rowGroupsMap = groupBy(rows, columnId)
 
       // Peform aggregations for each group
-      const aggregatedGroupedRows = Object.entries(rowGroupsMap).map(
+      const aggregatedGroupedRows = Array.from(rowGroupsMap.entries()).map(
         ([groupingVal, groupedRows], index) => {
           let id = `${columnId}:${groupingVal}`
           id = parentId ? `${parentId}>${id}` : id
@@ -445,13 +445,18 @@ const decorateCell: DecorateCell = cell => {
 }
 
 function groupBy(rows: Row[], columnId: ColumnId) {
-  const map: Record<any, Row[]> = {}
-  return rows.reduce((prev, row) => {
+  const groupMap = new Map<any, Row[]>()
+
+  return rows.reduce((map, row) => {
     const resKey = `${row.values[columnId]}`
-    prev[resKey] = Array.isArray(prev[resKey]) ? prev[resKey] : []
-    prev[resKey].push(row)
-    return prev
-  }, map)
+    const previous = map.get(resKey)
+    if (!previous) {
+      map.set(resKey, [row])
+    } else {
+      map.set(resKey, [...previous, row])
+    }
+    return map
+  }, groupMap)
 }
 
 export const withGrouping = {

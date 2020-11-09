@@ -31,6 +31,8 @@ const useReduceOptions: UseReduceOptions = options => {
       []
     ),
     autoResetColumnFilters: true,
+    enableFilters: true,
+    filterFromChildrenUp: true,
     ...options,
     initialState: {
       columnFilters: [],

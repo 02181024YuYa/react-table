@@ -51,7 +51,7 @@ export const includes: FilterFn = (rows, ids, filterValue) => {
 
 includes.autoRemove = val => !val || !val.length
 
-export const includesAll: FilterFn = (rows, ids, filterValue: any[]) => {
+export const includesAll: FilterFn = (rows, ids, filterValue: unknown[]) => {
   return rows.filter(row => {
     return ids.some(id => {
       const rowValue = row.values[id]

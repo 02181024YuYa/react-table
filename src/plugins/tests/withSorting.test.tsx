@@ -1,10 +1,11 @@
 import React from 'react'
 import { renderHook, act } from '@testing-library/react-hooks'
 import { getHeaderIds, getRowValues } from '../../../test-utils'
-import { useTable } from '../../hooks/useTable'
+import { useTable } from '../../core/useTable'
 import { noop } from '../../utils'
 import { withSorting } from '../withSorting'
 import type { Column, TableState } from '../../types'
+import { withCore } from '../withCore'
 
 const data = [
   {
@@ -74,7 +75,7 @@ describe('withSorting', () => {
   it('renders a sortable table', () => {
     const { result } = renderHook(
       options => {
-        const instance = useTable(options, [withSorting])
+        const instance = useTable(options, [withCore, withSorting])
 
         return instance
       },

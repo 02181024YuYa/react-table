@@ -7,7 +7,6 @@ export const defaultColumn: Partial<TableColumn> = {
   Header: () => <>&nbsp;</>,
   Cell: ({ value = '' }: { value: any }): JSX.Element =>
     typeof value === 'boolean' ? value.toString() : value,
-  defaultIsVisible: true,
   width: 150,
   minWidth: 20,
   maxWidth: Number.MAX_SAFE_INTEGER,

@@ -31,6 +31,8 @@ const useReduceOptions: UseReduceOptions = options => {
     ),
     autoResetGlobalFilter: true,
     globalFilterType: 'text',
+    enableFilters: true,
+    filterFromChildrenUp: true,
     ...options,
     initialState: {
       globalFilter: null,
@@ -42,7 +44,7 @@ const useReduceOptions: UseReduceOptions = options => {
 const useInstanceAfterState: UseInstanceAfterState = instance => {
   instance.setGlobalFilter = React.useCallback(
     updater =>
-      instance.options.onGlobalFilterChange?.((old: any) => {
+      instance.options.onGlobalFilterChange?.((old: unknown) => {
         const filterMethod = getFilterMethod(
           instance.options.globalFilterType,
           instance.options.filterTypes || {},
@@ -53,8 +55,7 @@ const useInstanceAfterState: UseInstanceAfterState = instance => {
 
         //
         if (shouldAutoRemoveFilter(filterMethod.autoRemove, newFilter)) {
-          const { globalFilter, ...stateWithout } = old
-          return stateWithout
+          return undefined
         }
 
         return newFilter

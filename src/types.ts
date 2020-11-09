@@ -3,284 +3,298 @@ export interface TableOptions {
   columns: Column[]
   debug?: boolean
   defaultColumn?: Column
-  initialState?: TableState
-  state?: TableState
-  onStateChange?: (newState: TableState, instance: TableInstance) => void
-  getSubRows?: <T extends { subRows?: any[] }>(
-    originalRow: T,
+  initialState?: {}
+  state?: {}
+  onStateChange?: <TTableInstance>(
+    newState: {},
+    instance: TTableInstance
+  ) => void
+  getSubRows?: <TOriginalRow>(
+    originalRow: TOriginalRow,
     index: number
-  ) => unknown[]
-  getRowId?: <T>(originalRow: T, index: number, parent?: Row) => string
-  enableFilters?: boolean
-  filterFromChildrenUp?: boolean
-  paginateExpandedRows?: boolean
+  ) => TOriginalRow[]
+  getRowId?: <TOriginalRow, TParentRow extends Row>(
+    originalRow: TOriginalRow,
+    index: number,
+    parent?: TParentRow
+  ) => string
 
-  // withColumnFilters
-  onColumnFiltersChange?: (
-    updater: Updater<TableState['columnFilters']>,
-    instance: TableInstance
-  ) => void
-  filterTypes?: Record<string, FilterFn>
-  manualColumnFilters?: boolean
-  autoResetColumnFilters?: boolean
-  disableFilters?: boolean
-  disableColumnFilters?: boolean
-  enableFacetedFilters?: boolean
-  enableUniqueValues?: boolean
-  enableMinMaxValues?: boolean
+  // // withColumnFilters
+  // enableFilters?: boolean
+  // filterFromChildrenUp?: boolean
+  // onColumnFiltersChange?: (
+  //   updater: Updater<TableState['columnFilters']>,
+  //   instance: TableInstance
+  // ) => void
+  // filterTypes?: Record<string, FilterFn>
+  // manualColumnFilters?: boolean
+  // autoResetColumnFilters?: boolean
+  // disableFilters?: boolean
+  // disableColumnFilters?: boolean
+  // enableFacetedFilters?: boolean
+  // enableUniqueValues?: boolean
+  // enableMinMaxValues?: boolean
 
-  // withColumnOrder
-  onColumnOrderChange?: (
-    updater: Updater<TableState['columnOrder']>,
-    instance: TableInstance
-  ) => void
+  // // withColumnOrder
+  // onColumnOrderChange?: (
+  //   updater: Updater<TableState['columnOrder']>,
+  //   instance: TableInstance
+  // ) => void
 
-  // withColumnPinning
-  onColumnPinningChange?: (
-    updater: Updater<TableState['columnPinning']>,
-    instance: TableInstance
-  ) => void
-  disablePinning: boolean
+  // // withColumnPinning
+  // onColumnPinningChange?: (
+  //   updater: Updater<TableState['columnPinning']>,
+  //   instance: TableInstance
+  // ) => void
+  // disablePinning: boolean
 
-  // withColumnResizing
-  onColumnResizingChange?: (
-    updater: Updater<TableState['columnResizing']>,
-    instance: TableInstance
-  ) => void
-  disableResizing?: boolean
+  // // withColumnResizing
+  // onColumnResizingChange?: (
+  //   updater: Updater<TableState['columnResizing']>,
+  //   instance: TableInstance
+  // ) => void
+  // disableResizing?: boolean
 
-  // withColumnVisibility
-  onColumnVisibilityChange?: (
-    updater: Updater<TableState['columnVisibility']>,
-    instance: TableInstance
-  ) => void
-  disableHiding?: boolean
+  // // withColumnVisibility
+  // onColumnVisibilityChange?: (
+  //   updater: Updater<TableState['columnVisibility']>,
+  //   instance: TableInstance
+  // ) => void
+  // disableHiding?: boolean
 
-  // withExpanding
-  onExpandedChange?: (
-    updater: Updater<TableState['expanded']>,
-    instance: TableInstance
-  ) => void
-  autoResetExpanded?: boolean
-  manualExpanding?: boolean
-  manualExpandedKey?: string
-  expandSubRows?: boolean
+  // // withExpanding
+  // paginateExpandedRows?: boolean
+  // onExpandedChange?: (
+  //   updater: Updater<TableState['expanded']>,
+  //   instance: TableInstance
+  // ) => void
+  // autoResetExpanded?: boolean
+  // manualExpanding?: boolean
+  // manualExpandedKey?: string
+  // expandSubRows?: boolean
 
-  // withGlobalFilter
-  manualGlobalFilter?: boolean
-  autoResetGlobalFilter?: boolean
+  // // withGlobalFilter
+  // manualGlobalFilter?: boolean
+  // autoResetGlobalFilter?: boolean
 
-  // withGrouping
-  onGroupingChange?: (
-    updater: Updater<TableState['grouping']>,
-    instance: TableInstance
-  ) => void
-  manualGrouping?: boolean
-  autoResetGrouping?: boolean
-  disableGrouping?: boolean
-  aggregationTypes: Record<string, AggregationFn>
+  // // withGrouping
+  // onGroupingChange?: (
+  //   updater: Updater<TableState['grouping']>,
+  //   instance: TableInstance
+  // ) => void
+  // manualGrouping?: boolean
+  // autoResetGrouping?: boolean
+  // disableGrouping?: boolean
+  // aggregationTypes: Record<string, AggregationFn>
 
-  // withGlobalFilter
-  onGlobalFilterChange?: (
-    updater: Updater<TableState['globalFilter']>,
-    instance: TableInstance
-  ) => void
-  globalFilterType?: FilterType
-  disableGlobalFilter?: boolean
+  // // withGlobalFilter
+  // onGlobalFilterChange?: (
+  //   updater: Updater<TableState['globalFilter']>,
+  //   instance: TableInstance
+  // ) => void
+  // globalFilterType?: FilterType
+  // disableGlobalFilter?: boolean
 
-  // withPagination
-  onPageIndexChange?: (
-    updater: Updater<TableState['pageIndex']>,
-    instance: TableInstance
-  ) => void
-  onPageSizeChange?: (
-    updater: Updater<TableState['pageSize']>,
-    instance: TableInstance
-  ) => void
-  onPageCountChange?: (
-    updater: Updater<TableState['pageCount']>,
-    instance: TableInstance
-  ) => void
-  manualPagination?: boolean
-  autoResetPageIndex?: boolean
+  // // withPagination
+  // paginateExpandedRows?: boolean
+  // onPageIndexChange?: (
+  //   updater: Updater<TableState['pageIndex']>,
+  //   instance: TableInstance
+  // ) => void
+  // onPageSizeChange?: (
+  //   updater: Updater<TableState['pageSize']>,
+  //   instance: TableInstance
+  // ) => void
+  // onPageCountChange?: (
+  //   updater: Updater<TableState['pageCount']>,
+  //   instance: TableInstance
+  // ) => void
+  // manualPagination?: boolean
+  // autoResetPageIndex?: boolean
 
-  // withRowSelection
-  onRowSelectionChange?: (
-    updater: Updater<TableState['rowSelection']>,
-    instance: TableInstance
-  ) => void
-  autoResetRowSelection?: boolean
-  selectSubRows?: boolean
-  selectGroupingRows?: boolean
-  manualRowSelectedKey?: string
-  isAdditiveSelectEvent?: (e: any) => boolean
-  isInclusiveSelectEvent?: (e: any) => boolean
+  // // withRowSelection
+  // onRowSelectionChange?: (
+  //   updater: Updater<TableState['rowSelection']>,
+  //   instance: TableInstance
+  // ) => void
+  // autoResetRowSelection?: boolean
+  // selectSubRows?: boolean
+  // selectGroupingRows?: boolean
+  // manualRowSelectedKey?: string
+  // isAdditiveSelectEvent?: (e: any) => boolean
+  // isInclusiveSelectEvent?: (e: any) => boolean
 
-  // withSorting
-  onSortingChange?: (
-    updater: Updater<TableState['sorting']>,
-    instance: TableInstance
-  ) => void
-  sortTypes?: Record<string, SortFn>
-  manualSorting?: boolean
-  autoResetSorting?: boolean
-  isMultiSortEvent?: (event: any) => boolean
-  disableMultiSort?: boolean
-  disableSortRemove?: boolean
-  disableMultiRemove?: boolean
-  maxMultiSortColCount?: number
-  disableSorting?: boolean
+  // // withSorting
+  // onSortingChange?: (
+  //   updater: Updater<TableState['sorting']>,
+  //   instance: TableInstance
+  // ) => void
+  // sortTypes?: Record<string, SortFn>
+  // manualSorting?: boolean
+  // autoResetSorting?: boolean
+  // isMultiSortEvent?: (event: any) => boolean
+  // disableMultiSort?: boolean
+  // disableSortRemove?: boolean
+  // disableMultiRemove?: boolean
+  // maxMultiSortColCount?: number
+  // disableSorting?: boolean
 }
 
-export interface TableInstance {
-  options: TableOptions
+export interface TableInstance<
+  TOptions extends TableOptions = TableOptions,
+  TTableProps extends TableProps = TableProps,
+  TTableHeadProps extends TableHeadProps = TableHeadProps,
+  TTableBodyProps extends TableBodyProps = TableBodyProps,
+  TTableFooterProps extends TableFooterProps = TableFooterProps,
+  THeaderProps extends HeaderProps = HeaderProps,
+  TFooterProps extends FooterProps = FooterProps
+> {
+  options: TOptions
   plugs: PluginPlugs
-  setState: (...any: any[]) => any
   columns: TableColumn[]
   allColumns: TableColumn[]
   leafColumns: TableColumn[]
   state: TableState
-  reset: () => void
-  getColumnWidth: (id?: ColumnId) => number
-  getTotalWidth: () => number
-  getTableHeadProps: (userProps?: any) => TableHeadProps
-  getTableFooterProps: (userProps?: any) => TableFooterProps
-  getTableBodyProps: (userProps?: any) => TableBodyProps
-  getTableProps: (userProps?: any) => TableProps
-  headerGroups: HeaderGroup[]
-  footerGroups: FooterGroup[]
-  flatHeaders: Header[]
-  flatFooters: Footer[]
-  rows: Row[]
-  flatRows: Row[]
-  rowsById: Record<RowId, Row>
+  setState: (...any: any[]) => any
+  getTableProps: <TUserProps>(userProps: TUserProps) => TUserProps & TTableProps
+  getTableHeadProps: <TUserProps>(
+    userProps: TUserProps
+  ) => TUserProps & TTableHeadProps
+  getTableBodyProps: <TUserProps>(
+    userProps: TUserProps
+  ) => TUserProps & TTableBodyProps
+  getTableFooterProps: <TUserProps>(
+    userProps: TUserProps
+  ) => TUserProps & TTableFooterProps
 
-  // withColumnFilters
-  setColumnFilters: (updater: Updater<TableState['columnFilters']>) => void
-  resetColumnFilters: () => void
-  getColumnCanFilter: (columnId?: ColumnId) => boolean
-  getColumnIsFiltered: (columnId?: ColumnId) => boolean
-  getColumnFilterValue: (columnId?: ColumnId) => any
-  getColumnFilterIndex: (columnId?: ColumnId) => number
-  setColumnFilterValue: (columnId?: ColumnId, value?: any) => void
+  // headerGroups: HeaderGroup[]
+  // footerGroups: FooterGroup[]
+  flatHeaders: Header<THeaderProps, TFooterProps>[]
+  flatFooters: Header<THeaderProps, TFooterProps>[]
+  // rows: Row[]
+  // flatRows: Row[]
+  // rowsById: Record<RowId, Row>
 
-  // withColumnOrder
-  setColumnOrder: (updater: Updater<TableState['columnOrder']>) => void
-  resetColumnOrder: () => void
+  // // withColumnFilters
+  // setColumnFilters: (updater: Updater<TableState['columnFilters']>) => void
+  // resetColumnFilters: () => void
+  // getColumnCanFilter: (columnId?: ColumnId) => boolean
+  // getColumnIsFiltered: (columnId?: ColumnId) => boolean
+  // getColumnFilterValue: (columnId?: ColumnId) => any
+  // getColumnFilterIndex: (columnId?: ColumnId) => number
+  // setColumnFilterValue: (columnId?: ColumnId, value?: unknown) => void
 
-  // withColumnPinning
-  setColumnPinning: (updater: Updater<TableState['columnPinning']>) => void
-  resetColumnPinning: () => void
-  toggleColumnPinning: (
-    columnId: ColumnId,
-    side: ColumnPinningSide,
-    value?: boolean
-  ) => void
-  getColumnCanPin: (columnId: ColumnId) => boolean
-  getColumnIsPinned: (columnId: ColumnId) => ColumnPinningStatus
-  getColumnPinnedIndex: (columnId: ColumnId) => number
-  centerLeafColumns: TableColumn[]
-  leftLeafColumns: TableColumn[]
-  rightLeafColumns: TableColumn[]
-  centerHeaderGroups: HeaderGroup[]
-  leftHeaderGroups: HeaderGroup[]
-  rightHeaderGroups: HeaderGroup[]
+  // // withColumnOrder
+  // setColumnOrder: (updater: Updater<TableState['columnOrder']>) => void
+  // resetColumnOrder: () => void
 
-  // withColumnResizing
-  setColumnResizing: (updater: Updater<TableState['columnResizing']>) => void
-  getColumnCanResize: (columnId: ColumnId) => boolean
-  getColumnIsResizing: (columnId: ColumnId) => boolean
+  // // withColumnPinning
+  // setColumnPinning: (updater: Updater<TableState['columnPinning']>) => void
+  // resetColumnPinning: () => void
+  // toggleColumnPinning: (
+  //   columnId: ColumnId,
+  //   side: ColumnPinningSide,
+  //   value?: boolean
+  // ) => void
+  // getColumnCanPin: (columnId: ColumnId) => boolean
+  // getColumnIsPinned: (columnId: ColumnId) => ColumnPinningStatus
+  // getColumnPinnedIndex: (columnId: ColumnId) => number
+  // centerLeafColumns: TableColumn[]
+  // leftLeafColumns: TableColumn[]
+  // rightLeafColumns: TableColumn[]
+  // centerHeaderGroups: HeaderGroup[]
+  // leftHeaderGroups: HeaderGroup[]
+  // rightHeaderGroups: HeaderGroup[]
 
-  // withColumnVisibility
-  setColumnVisibility: (
-    updater: Updater<TableState['columnVisibility']>
-  ) => void
-  getColumnIsVisible: (columnId: ColumnId) => boolean
-  toggleColumnVisibility: (columnId: ColumnId, value?: boolean) => void
-  getColumnCanHide: (columnId: ColumnId) => boolean
-  toggleAllColumnsVisible: (value?: boolean) => void
-  getIsAllColumnsVisible: () => boolean
-  getIsSomeColumnsVisible: () => boolean
-  preVisibleLeafColumns: TableColumn[]
-  getToggleAllColumnsVisibilityProps: (
-    userProps?: any
-  ) => ToggleAllColumnsVisibilityProps
+  // // withColumnResizing
+  // setColumnResizing: (updater: Updater<TableState['columnResizing']>) => void
+  // getColumnCanResize: (columnId: ColumnId) => boolean
+  // getColumnIsResizing: (columnId: ColumnId) => boolean
 
-  // withExpanding
-  setExpanded: (updater: Updater<TableState['expanded']>) => void
-  resetExpanded: () => void
-  getIsAllRowsExpanded: () => boolean
-  getExpandedDepth: () => number
-  toggleRowExpanded: (rowId: RowId, value?: boolean) => void
-  toggleAllRowsExpanded: (value?: boolean) => void
-  getToggleAllRowsExpandedProps: (userProps?: any) => ToggleAllRowsExpandedProps
+  // // withColumnVisibility
+  // setColumnVisibility: (
+  //   updater: Updater<TableState['columnVisibility']>
+  // ) => void
+  // getColumnIsVisible: (columnId: ColumnId) => boolean
+  // toggleColumnVisibility: (columnId: ColumnId, value?: boolean) => void
+  // getColumnCanHide: (columnId: ColumnId) => boolean
+  // toggleAllColumnsVisible: (value?: boolean) => void
+  // getIsAllColumnsVisible: () => boolean
+  // getIsSomeColumnsVisible: () => boolean
+  // preVisibleLeafColumns: TableColumn[]
+  // getToggleAllColumnsVisibilityProps: (userProps?: {}) => ToggleAllColumnsVisibilityProps
 
-  // withGrouping
-  setGrouping: (updater: Updater<TableState['grouping']>) => void
-  resetGrouping: () => void
-  toggleColumnGrouping: (columnId: ColumnId, value?: boolean) => void
-  getColumnCanGroup: (columnId: ColumnId) => boolean
-  getColumnIsGrouped: (columnId: ColumnId) => boolean
-  getColumnGroupedIndex: (columnId: ColumnId) => number
-  nonGroupedRowsById: Record<RowId, Row>
+  // // withExpanding
+  // setExpanded: (updater: Updater<TableState['expanded']>) => void
+  // resetExpanded: () => void
+  // getIsAllRowsExpanded: () => boolean
+  // getExpandedDepth: () => number
+  // toggleRowExpanded: (rowId: RowId, value?: boolean) => void
+  // toggleAllRowsExpanded: (value?: boolean) => void
+  // getToggleAllRowsExpandedProps: (userProps?: {}) => ToggleAllRowsExpandedProps
 
-  // withGlobalFilter
-  setGlobalFilter?: (updater: Updater<TableState['globalFilter']>) => void
-  resetGlobalFilter?: () => void
-  getCanGlobalFilterColumn?: (columnId: ColumnId) => boolean
+  // // withGrouping
+  // setGrouping: (updater: Updater<TableState['grouping']>) => void
+  // resetGrouping: () => void
+  // toggleColumnGrouping: (columnId: ColumnId, value?: boolean) => void
+  // getColumnCanGroup: (columnId: ColumnId) => boolean
+  // getColumnIsGrouped: (columnId: ColumnId) => boolean
+  // getColumnGroupedIndex: (columnId: ColumnId) => number
+  // nonGroupedRowsById: Record<RowId, Row>
 
-  // withPagination
-  setPageIndex?: (updater: Updater<TableState['pageIndex']>) => void
-  setPageSize?: (updater: Updater<TableState['pageSize']>) => void
-  setPageCount?: (updater: Updater<TableState['pageCount']>) => void
-  resetPageIndex?: () => void
-  resetPageSize?: () => void
-  resetPageCount?: () => void
-  getPageCount?: () => number
-  getPageOptions?: () => number[]
-  getPageRows?: () => Row[]
-  getCanPreviousPage?: () => boolean
-  getCanNextPage?: () => boolean
-  gotoPreviousPage?: () => void
-  gotoNextPage?: () => void
+  // // withGlobalFilter
+  // setGlobalFilter?: (updater: Updater<TableState['globalFilter']>) => void
+  // resetGlobalFilter?: () => void
+  // getCanGlobalFilterColumn?: (columnId: ColumnId) => boolean
 
-  // withRowSelection
-  setRowSelection?: (updater: Updater<TableState['rowSelection']>) => void
-  resetRowSelection?: () => void
-  toggleAllRowsSelected?: (value?: boolean) => void
-  toggleAllPageRowsSelected?: (value?: boolean) => void
-  toggleRowSelected?: (rowId: RowId, value?: boolean) => void
-  addRowSelectionRange?: (rowId: RowId) => void
-  getSelectedFlatRows?: () => Row[]
-  getIsAllRowsSelected?: () => boolean
-  getIsAllPageRowsSelected?: () => boolean
-  getIsSomeRowsSelected?: () => false | number
-  getIsSomePageRowsSelected?: () => false | number
-  getToggleAllRowsSelectedProps?: (
-    userProps?: any
-  ) => ToggleAllRowsSelectedProps
-  getToggleAllPageRowsSelectedProps?: (
-    userProps?: any
-  ) => ToggleAllPageRowsSelectedProps
+  // // withPagination
+  // setPageIndex?: (updater: Updater<TableState['pageIndex']>) => void
+  // setPageSize?: (updater: Updater<TableState['pageSize']>) => void
+  // setPageCount?: (updater: Updater<TableState['pageCount']>) => void
+  // resetPageIndex?: () => void
+  // resetPageSize?: () => void
+  // resetPageCount?: () => void
+  // getPageCount?: () => number
+  // getPageOptions?: () => number[]
+  // getPageRows?: () => Row[]
+  // getCanPreviousPage?: () => boolean
+  // getCanNextPage?: () => boolean
+  // gotoPreviousPage?: () => void
+  // gotoNextPage?: () => void
 
-  // withSorting
-  setSorting: (updater: Updater<TableState['sorting']>) => void
-  resetSorting: () => void
-  toggleColumnSorting: (
-    columnId?: ColumnId,
-    desc?: boolean,
-    multi?: boolean
-  ) => void
-  getColumnCanSort: (columnId?: ColumnId) => boolean
-  getColumnSortedIndex: (columnId?: ColumnId) => number
-  getColumnIsSorted: (columnId?: ColumnId) => boolean
-  getColumnIsSortedDesc: (columnId?: ColumnId) => boolean
-  clearColumnSorting: (columnId?: ColumnId) => void
+  // // withRowSelection
+  // setRowSelection?: (updater: Updater<TableState['rowSelection']>) => void
+  // resetRowSelection?: () => void
+  // toggleAllRowsSelected?: (value?: boolean) => void
+  // toggleAllPageRowsSelected?: (value?: boolean) => void
+  // toggleRowSelected?: (rowId: RowId, value?: boolean) => void
+  // addRowSelectionRange?: (rowId: RowId) => void
+  // getSelectedFlatRows?: () => Row[]
+  // getIsAllRowsSelected?: () => boolean
+  // getIsAllPageRowsSelected?: () => boolean
+  // getIsSomeRowsSelected?: () => false | number
+  // getIsSomePageRowsSelected?: () => false | number
+  // getToggleAllRowsSelectedProps?: (userProps?: {}) => ToggleAllRowsSelectedProps
+  // getToggleAllPageRowsSelectedProps?: (userProps?: {}) => ToggleAllPageRowsSelectedProps
+
+  // // withSorting
+  // setSorting: (updater: Updater<TableState['sorting']>) => void
+  // resetSorting: () => void
+  // toggleColumnSorting: (
+  //   columnId?: ColumnId,
+  //   desc?: boolean,
+  //   multi?: boolean
+  // ) => void
+  // getColumnCanSort: (columnId?: ColumnId) => boolean
+  // getColumnSortedIndex: (columnId?: ColumnId) => number
+  // getColumnIsSorted: (columnId?: ColumnId) => boolean
+  // getColumnIsSortedDesc: (columnId?: ColumnId) => boolean
+  // clearColumnSorting: (columnId?: ColumnId) => void
 }
 
-export type ColumnId = string | number
-export type RowId = string | number
-export type CellId = string | number
+export type ColumnId = string
+export type RowId = string
+export type CellId = string
 
 export type Updater<T> = T | ((old: T) => T)
 export type FromUpdater<T extends (...any: any[]) => any> = T extends (
@@ -297,7 +311,7 @@ export interface TableState {
   columnVisibility?: ColumnVisibility
   expanded?: Expanded
   grouping?: Grouping
-  globalFilter?: any
+  globalFilter?: unknown
   pageIndex?: number
   pageSize?: number
   pageCount?: number
@@ -305,14 +319,14 @@ export interface TableState {
   sorting?: SortObj[]
 }
 
-export interface Row<T = any> {
+export interface Row<T = unknown> {
   id: RowId
   subRows: Row[]
   index: number
   depth: number
   values: RowValues
   leafRows: Row[]
-  getRowProps?: (userProps?: any) => RowProps
+  getRowProps?: (userProps?: {}) => RowProps
   original?: T
   originalSubRows?: T[]
   cells?: Cell[]
@@ -322,149 +336,174 @@ export interface Row<T = any> {
   toggleExpanded?: (value?: boolean) => void
   getIsExpanded?: () => boolean
   getCanExpand?: () => boolean
-  getToggleExpandedProps?: (userProps?: any) => ToggleExpandedProps
+  getToggleExpandedProps?: (userProps?: {}) => ToggleExpandedProps
 
   // withGrouping
   groupingId?: ColumnId
-  groupingVal?: any
+  groupingVal?: unknown
   getIsGrouped?: () => boolean
 
   // withRowSelection
   getIsSelected?: () => boolean | 'some'
   getIsSomeSelected?: () => boolean
   toggleSelected?: (value?: boolean) => void
-  getToggleRowSelectedProps?: (userProps?: any) => ToggleExpandedProps
-  getProps?: (userProps?: any) => ToggleExpandedProps
+  getToggleRowSelectedProps?: (userProps?: {
+    forInput?: boolean
+    onClick?: any
+  }) => ToggleExpandedProps
+  getProps?: (userProps?: {}) => ToggleExpandedProps
 }
 
 export interface RowValues {
-  [key: string]: any
+  [key: string]: unknown
 }
 
-export interface Column {
-  Header?: JSX.Element | ((...any: any[]) => JSX.Element)
-  accessor?: string | ((originalRow: any, index: number, row: Row) => unknown)
+interface ColumnBase {
   id?: ColumnId
-  Cell?: JSX.Element | ((...any: any[]) => JSX.Element)
-  defaultIsVisible?: boolean
+  Header?: Renderer
+  accessor?:
+    | string
+    | ((originalRow: unknown, index: number, row: Row) => unknown)
+  Cell?: Renderer
   width?: number
   minWidth?: number
   maxWidth?: number
   columns?: Column[]
-
-  // withColumnFilters
-  filterType?: FilterType
-  disableAllFilters?: boolean
-  disableFilter?: boolean
-  defaultCanFilter?: boolean
-  defaultCanFilterColumn?: boolean
-
-  // withSorting
-  sortDescFirst?: boolean
-  disableSorting?: boolean
-  defaultCanSort?: boolean
-  sortType?: SortType
-
-  // withColumnFilters
-  enableUniqueValues?: boolean
-  enableMinMaxValues?: boolean
-  defaultCanPin?: boolean
-
-  // withColumnResizing
-  disableResizing?: boolean
-  defaultCanResize?: boolean
-
-  // withColumnVisibility
-  disableHiding?: boolean
-  defaultCanHide?: boolean
-
-  // withExpanding
-  isExpanderColumn?: boolean
-
-  // withGrouping
-  disableGrouping?: boolean
-  defaultCanGroup?: boolean
-  aggregate?: AggregationType
-  aggregateValue?: AggregateValueFn
-  Aggregated?: JSX.Element | ((...any: any[]) => JSX.Element)
-
-  // withGlobalFilter
-  disableGlobalFilter?: boolean
-  defaultCanGlobalFilter?: boolean
-
-  // withRowSelection
-  isRowSelectionColumn?: boolean
-
-  // withColumnPinning
-  disablePinning?: boolean
 }
 
-export interface TableColumn extends Column {
+interface ColumnWithStringHeader extends ColumnBase {
+  Header: string
+}
+
+interface ColumnWithStringAccessor extends ColumnBase {
+  accessor: string
+}
+
+interface ColumnWithId extends ColumnBase {
   id: ColumnId
-  accessor?: (originalRow: any, index: number, row: Row) => unknown
+}
+
+export type Column =
+  | ColumnWithStringHeader
+  | ColumnWithStringAccessor
+  | ColumnWithId
+
+type Renderer = string | JSX.Element | ((...args: any[]) => JSX.Element)
+
+// export interface ColumnToMigrate {
+//   // withColumnFilters
+//   filterType?: FilterType
+//   disableAllFilters?: boolean
+//   disableFilter?: boolean
+//   defaultCanFilter?: boolean
+//   defaultCanFilterColumn?: boolean
+
+//   // withSorting
+//   sortDescFirst?: boolean
+//   disableSorting?: boolean
+//   defaultCanSort?: boolean
+//   sortType?: SortType
+
+//   // withColumnFilters
+//   enableUniqueValues?: boolean
+//   enableMinMaxValues?: boolean
+//   defaultCanPin?: boolean
+
+//   // withColumnResizing
+//   disableResizing?: boolean
+//   defaultCanResize?: boolean
+
+//   // withColumnVisibility
+//   defaultIsVisible: boolean
+//   disableHiding?: boolean
+//   defaultCanHide?: boolean
+
+//   // withExpanding
+//   isExpanderColumn?: boolean
+
+//   // withGrouping
+//   disableGrouping?: boolean
+//   defaultCanGroup?: boolean
+//   aggregate?: AggregationType
+//   aggregateValue?: AggregateValueFn
+//   Aggregated?: JSX.Element | ((...any: any[]) => JSX.Element)
+
+//   // withGlobalFilter
+//   disableGlobalFilter?: boolean
+//   defaultCanGlobalFilter?: boolean
+
+//   // withRowSelection
+//   isRowSelectionColumn?: boolean
+
+//   // withColumnPinning
+//   disablePinning?: boolean
+// }
+
+export type TableColumn = Column & {
+  id: ColumnId
   depth: number
   originalColumn: Column
-  parent?: TableColumn
-  prepared?: boolean
-  render?: (Comp?: any, props?: any) => JSX.Element | null
-  getWidth?: () => number
-  columns?: TableColumn[]
-  header?: Header
+  parent: TableColumn
+  prepared: boolean
+  render: (Comp?: unknown, props?: any) => JSX.Element | null
+  getWidth: () => number
+  columns: TableColumn[]
+  header: Header
 
-  // withSorting
-  sortInverted?: boolean
-  getCanSort?: () => boolean
-  getSortedIndex?: () => number
-  getIsSorted?: () => boolean
-  toggleSorting?: (desc?: boolean, multi?: boolean) => void
-  clearSorting?: () => void
-  getIsSortedDesc?: () => boolean
-  getToggleSortingProps?: (userProps?: any) => ToggleSortingProps
+  // // withSorting
+  // sortInverted?: boolean
+  // getCanSort?: () => boolean
+  // getSortedIndex?: () => number
+  // getIsSorted?: () => boolean
+  // toggleSorting?: (desc?: boolean, multi?: boolean) => void
+  // clearSorting?: () => void
+  // getIsSortedDesc?: () => boolean
+  // getToggleSortingProps?: (userProps?: {}) => ToggleSortingProps
 
-  // withColumnFilters
-  getCanFilter?: () => boolean
-  getFilterIndex?: () => number
-  getIsFiltered?: () => boolean
-  getFilterValue?: () => unknown
-  setFilterValue?: (value: unknown) => void
-  preFilteredRows?: Row[]
-  preFilteredUniqueValues?: Map<unknown, number>
-  preFilteredMinMaxValues?: [MinMaxValue, MinMaxValue]
+  // // withColumnFilters
+  // getCanFilter?: () => boolean
+  // getFilterIndex?: () => number
+  // getIsFiltered?: () => boolean
+  // getFilterValue?: () => unknown
+  // setFilterValue?: (value: unknown) => void
+  // preFilteredRows?: Row[]
+  // preFilteredUniqueValues?: Map<unknown, number>
+  // preFilteredMinMaxValues?: [MinMaxValue, MinMaxValue]
 
-  // withColumnResizing
-  getIsResizing?: () => boolean
-  getCanResize?: () => boolean
-  getResizerProps?: (userProps?: any) => ResizerProps
+  // // withColumnResizing
+  // getIsResizing?: () => boolean
+  // getCanResize?: () => boolean
+  // getResizerProps?: (userProps?: {}) => ResizerProps
 
-  // withColumnVisibility
-  getIsVisible?: () => boolean
-  getCanHide?: () => boolean
-  toggleVisibility?: (value?: boolean) => void
-  getToggleVisibilityProps?: (userProps?: any) => ToggleColumnVisibilityProps
+  // // withColumnVisibility
+  // getIsVisible?: () => boolean
+  // getCanHide?: () => boolean
+  // toggleVisibility?: (value?: boolean) => void
+  // getToggleVisibilityProps?: (userProps?: {}) => ToggleColumnVisibilityProps
 
-  // withGrouping
-  getCanGroup?: () => boolean
-  getGroupedIndex?: () => number
-  getIsGrouped?: () => boolean
-  toggleGrouping?: (value?: boolean) => void
-  getToggleGroupingProps?: (userProps?: any) => ToggleGroupingProps
+  // // withGrouping
+  // getCanGroup?: () => boolean
+  // getGroupedIndex?: () => number
+  // getIsGrouped?: () => boolean
+  // toggleGrouping?: (value?: boolean) => void
+  // getToggleGroupingProps?: (userProps?: {}) => ToggleGroupingProps
 
-  // withColumnPinning
-  getCanPin?: () => boolean
-  getPinnedIndex?: () => number
-  getIsPinned?: () => ColumnPinningStatus
-  togglePinning?: (side: ColumnPinningSide, value?: boolean) => void
+  // // withColumnPinning
+  // getCanPin?: () => boolean
+  // getPinnedIndex?: () => number
+  // getIsPinned?: () => ColumnPinningStatus
+  // togglePinning?: (side: ColumnPinningSide, value?: boolean) => void
 }
 
-type MinMaxValue = number | string
+// type MinMaxValue = number | string
 
 export interface Cell {
   id: CellId
   row: Row
   column: TableColumn
-  value: any
-  render?: (Comp?: any, props?: any) => JSX.Element | null
-  getCellProps?: (userProps?: any) => CellProps
+  value: unknown
+  render?: (Comp?: unknown, props?: any) => JSX.Element | null
+  getCellProps?: (userProps?: {}) => CellProps
 
   // withGrouping
   getIsGrouped?: () => boolean
@@ -478,29 +517,34 @@ export interface Plugin {
   plugs: PluginPlugs
 }
 
-export interface Header extends TableColumn {
+export type Header<
+  THeaderProps extends HeaderProps = HeaderProps,
+  TFooterProps extends FooterProps = FooterProps
+> = TableColumn & {
   isPlaceholder: boolean
   placeholderId: ColumnId
   column: TableColumn
-  getHeaderProps: (userProps?: any) => HeaderProps
-  getFooterProps: (userProps?: any) => FooterProps
+  getHeaderProps: <TUserProps>(
+    userProps: TUserProps
+  ) => TUserProps & THeaderProps
+  getFooterProps: <TUserProps>(
+    userProps: TUserProps
+  ) => TUserProps & TFooterProps
   getWidth: () => number
-  subHeaders: Header[]
+  subHeaders: Header<THeaderProps, TFooterProps>[]
   colSpan: number
   rowSpan: number
 }
-
-export interface Footer extends Header {}
 
 export interface HeaderGroup {
   id: ColumnId
   depth: number
   headers: Header[]
-  getHeaderGroupProps: (userProps?: any) => HeaderProps
-  getFooterGroupProps: (userProps?: any) => FooterProps
+  getHeaderGroupProps: (userProps?: {}) => HeaderProps
+  getFooterGroupProps: (userProps?: {}) => FooterProps
 }
 export interface FooterGroup {
-  footers: Footer[]
+  headers: Header[]
 }
 export interface TableProps {}
 export interface TableBodyProps {}
@@ -513,134 +557,229 @@ export interface FooterProps {}
 export interface RowProps {}
 export interface CellProps {}
 
-export type UseReduceOptions = (
-  options: TableOptions,
-  { instance }: { instance: TableInstance }
-) => TableOptions
-export type UseInstanceAfterState = (instance: TableInstance) => TableInstance
-export type UseReduceColumns = (
-  columns: TableColumn[],
-  { instance }: { instance: TableInstance }
-) => TableColumn[]
-export type UseReduceAllColumns = (
-  allColumns: TableColumn[],
-  { instance }: { instance: TableInstance }
-) => TableColumn[]
-export type UseReduceLeafColumns = (
-  leafColumns: TableColumn[],
-  { instance }: { instance: TableInstance }
-) => TableColumn[]
-export type DecorateColumn = (
-  column: TableColumn,
-  { instance }: { instance: TableInstance }
-) => TableColumn
-export type UseReduceHeaderGroups = (
-  headerGroups: HeaderGroup[],
-  { instance }: { instance: TableInstance }
-) => HeaderGroup[]
-export type UseReduceFooterGroups = (
-  footerGroups: FooterGroup[],
-  { instance }: { instance: TableInstance }
-) => FooterGroup[]
-export type UseReduceFlatHeaders = (
-  flatHeaders: Header[],
-  { instance }: { instance: TableInstance }
-) => Header[]
-export type DecorateHeader = (
-  header: Header,
-  { instance }: { instance: TableInstance }
-) => Header
-export type DecorateRow = (
-  row: Row,
-  { instance }: { instance: TableInstance }
-) => Row
-export type DecorateCell = (
-  cell: Cell,
-  { instance }: { instance: TableInstance }
-) => Cell
-export type UseInstanceAfterDataModel = (
-  instance: TableInstance
-) => TableInstance
-export type ReduceTableProps = (
-  tableProps: TableProps,
-  { instance }: { instance: TableInstance }
-) => TableProps
-export type ReduceTableBodyProps = (
-  tableBodyProps: TableBodyProps,
-  { instance }: { instance: TableInstance }
-) => TableBodyProps
-export type ReduceTableHeadProps = (
-  tableHeadProps: TableHeadProps,
-  { instance }: { instance: TableInstance }
-) => TableHeadProps
-export type ReduceTableFooterProps = (
-  tableFootProps: TableFooterProps,
-  { instance }: { instance: TableInstance }
-) => TableFooterProps
-export type ReduceHeaderGroupProps = (
-  headerGroupProps: HeaderGroupProps,
-  { instance }: { instance: TableInstance; headerGroup: HeaderGroup }
-) => HeaderGroupProps
-export type ReduceFooterGroupProps = (
-  footerGroupProps: FooterGroupProps,
-  {
-    instance,
-    headerGroup,
-  }: { instance: TableInstance; headerGroup: HeaderGroup }
-) => FooterGroupProps
-export type ReduceHeaderProps = (
-  headerProps: HeaderProps,
-  { instance, header }: { instance: TableInstance; header: Header }
-) => HeaderProps
-export type ReduceFooterProps = (
-  footerProps: FooterProps,
-  { instance, header }: { instance: TableInstance; header: Header }
-) => HeaderProps
-export type ReduceRowProps = (
-  rowProps: RowProps,
-  { instance, row }: { instance: TableInstance; row: Row }
-) => RowProps
-export type ReduceCellProps = (
-  cellProps: CellProps,
-  { instance, cell }: { instance: TableInstance; cell: Cell }
-) => CellProps
+export type UseReduceOptions<
+  TTableOptions extends TableOptions, // Required
+  TTableInstance extends TableInstance // Required
+> = (
+  options: unknown,
+  { instance }: { instance: TTableInstance }
+) => TTableOptions
+
+export type UseInstanceAfterState<
+  TTableInstanceIn extends TableInstance, // Required
+  TTableInstanceOut extends TableInstance // Required
+> = (instance: TTableInstanceIn) => TTableInstanceOut
+
+export type UseInstanceAfterDataModel<
+  TTableInstanceIn extends TableInstance, // Required
+  TTableInstanceOut extends TableInstance // Required
+> = (instance: TTableInstanceIn) => TTableInstanceOut
+
+// export type UseReduceColumns = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   columns: TableColumn[],
+//   { instance }: { instance: TTableInstance }
+// ) => TableColumn[]
+
+// export type UseReduceAllColumns = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   allColumns: TableColumn[],
+//   { instance }: { instance: TTableInstance }
+// ) => TableColumn[]
+
+// export type UseReduceLeafColumns = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   leafColumns: TableColumn[],
+//   { instance }: { instance: TTableInstance }
+// ) => TableColumn[]
+
+// export type DecorateColumn = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   column: TableColumn,
+//   { instance }: { instance: TTableInstance }
+// ) => TableColumn
+
+// export type UseReduceHeaderGroups = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   headerGroups: HeaderGroup[],
+//   { instance }: { instance: TTableInstance }
+// ) => HeaderGroup[]
+
+// export type UseReduceFooterGroups = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   footerGroups: FooterGroup[],
+//   { instance }: { instance: TTableInstance }
+// ) => FooterGroup[]
+
+// export type UseReduceFlatHeaders = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   flatHeaders: Header[],
+//   { instance }: { instance: TTableInstance }
+// ) => Header[]
+
+export type DecorateHeader<
+  THeaderIn extends Header = Header,
+  THeaderOut extends Header = Header,
+  TTableInstance extends TableInstance = TableInstance
+> = (
+  header: THeaderIn,
+  { instance }: { instance: TTableInstance }
+) => THeaderOut
+
+// export type DecorateRow = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   row: Row,
+//   { instance }: { instance: TTableInstance }
+// ) => Row
+
+// export type DecorateCell = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   cell: Cell,
+//   { instance }: { instance: TTableInstance }
+// ) => Cell
+
+export type ReduceTableProps<
+  TTableProps extends TableProps, // Required
+  TTableInstance extends TableInstance // Required
+> = <TUserTableProps>(
+  tableProps: unknown,
+  { instance }: { instance: TTableInstance }
+) => TUserTableProps & TTableProps
+
+export type ReduceTableBodyProps<
+  TTableBodyProps extends TableBodyProps, // Required
+  TTableInstance extends TableInstance // Required
+> = <TUserTableBodyProps>(
+  tableBodyProps: unknown,
+  { instance }: { instance: TTableInstance }
+) => TUserTableBodyProps & TTableBodyProps
+
+export type ReduceTableHeadProps<
+  TTableHeadProps extends TableHeadProps, // Required
+  TTableInstance extends TableInstance // Required
+> = <TUserTableHeadProps>(
+  tableHeadProps: unknown,
+  { instance }: { instance: TTableInstance }
+) => TUserTableHeadProps & TTableHeadProps
+
+export type ReduceTableFooterProps<
+  TTableFooterProps extends TableFooterProps, // Required
+  TTableInstance extends TableInstance // Required
+> = <TUserTableFooterProps>(
+  tableFooterProps: unknown,
+  { instance }: { instance: TTableInstance }
+) => TUserTableFooterProps & TTableFooterProps
+
+// export type ReduceHeaderGroupProps = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   headerGroupProps: HeaderGroupProps,
+//   { instance }: { instance: TTableInstance; headerGroup: HeaderGroup }
+// ) => HeaderGroupProps
+
+// export type ReduceFooterGroupProps = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   footerGroupProps: FooterGroupProps,
+//   {
+//     instance,
+//     headerGroup,
+//   }: { instance: TTableInstance; headerGroup: HeaderGroup }
+// ) => FooterGroupProps
+
+export type ReduceHeaderProps<
+  THeaderPropsIn extends HeaderProps = HeaderProps,
+  THeaderPropsOut extends HeaderProps = HeaderProps,
+  TTableInstance extends TableInstance = TableInstance,
+  THeader extends Header = Header
+> = (
+  headerProps: THeaderPropsIn,
+  { instance, header }: { instance: TTableInstance; header: THeader }
+) => THeaderPropsOut
+
+export type ReduceFooterProps<
+  TFooterPropsIn extends FooterProps = FooterProps,
+  TFooterPropsOut extends FooterProps = FooterProps,
+  TTableInstance extends TableInstance = TableInstance,
+  THeader extends Header = Header
+> = (
+  footerProps: TFooterPropsIn,
+  { instance, header }: { instance: TTableInstance; header: THeader }
+) => TFooterPropsOut
+
+// export type ReduceRowProps = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   rowProps: RowProps,
+//   { instance, row }: { instance: TTableInstance; row: Row }
+// ) => RowProps
+
+// export type ReduceCellProps = <
+//   TTableInstance extends TableInstance = TableInstance
+// >(
+//   cellProps: CellProps,
+//   { instance, cell }: { instance: TTableInstance; cell: Cell }
+// ) => CellProps
 
 export type PluginPlugs = {
-  useReduceOptions?: UseReduceOptions
-  useInstanceAfterState?: UseInstanceAfterState
-  useReduceColumns?: UseReduceColumns
-  useReduceAllColumns?: UseReduceAllColumns
-  useReduceLeafColumns?: UseReduceLeafColumns
-  decorateColumn?: DecorateColumn
-  useReduceHeaderGroups?: UseReduceHeaderGroups
-  useReduceFooterGroups?: UseReduceFooterGroups
-  useReduceFlatHeaders?: UseReduceFlatHeaders
-  decorateHeader?: DecorateHeader
-  decorateRow?: DecorateRow
-  decorateCell?: DecorateCell
-  useInstanceAfterDataModel?: UseInstanceAfterDataModel
-  reduceTableProps?: ReduceTableProps
-  reduceTableBodyProps?: ReduceTableBodyProps
-  reduceTableHeadProps?: ReduceTableHeadProps
-  reduceTableFooterProps?: ReduceTableFooterProps
-  reduceHeaderGroupProps?: ReduceHeaderGroupProps
-  reduceFooterGroupProps?: ReduceFooterGroupProps
-  reduceHeaderProps?: ReduceHeaderProps
-  reduceFooterProps?: ReduceFooterProps
-  reduceRowProps?: ReduceRowProps
-  reduceCellProps?: ReduceCellProps
+  useReduceOptions: UseReduceOptions<TableOptions, TableInstance>
+  useInstanceAfterState: UseInstanceAfterState<TableInstance, TableInstance>
+  useInstanceAfterDataModel: UseInstanceAfterDataModel<
+    TableInstance,
+    TableInstance
+  >
+  // useReduceColumns: UseReduceColumns
+  // useReduceAllColumns: UseReduceAllColumns
+  // useReduceLeafColumns: UseReduceLeafColumns
+  // decorateColumn: DecorateColumn
+  // useReduceHeaderGroups: UseReduceHeaderGroups
+  // useReduceFooterGroups: UseReduceFooterGroups
+  // useReduceFlatHeaders: UseReduceFlatHeaders
+  decorateHeader: DecorateHeader<Header, Header, TableInstance>
+  // decorateRow: DecorateRow
+  // decorateCell: DecorateCell
+  reduceTableProps: ReduceTableProps<TableProps, TableInstance>
+  reduceTableBodyProps: ReduceTableBodyProps<TableBodyProps, TableInstance>
+  reduceTableHeadProps: ReduceTableHeadProps<TableHeadProps, TableInstance>
+  reduceTableFooterProps: ReduceTableFooterProps<
+    TableFooterProps,
+    TableInstance
+  >
+  // reduceHeaderGroupProps: ReduceHeaderGroupProps
+  // reduceFooterGroupProps: ReduceFooterGroupProps
+  reduceHeaderProps: ReduceHeaderProps<
+    HeaderProps,
+    HeaderProps,
+    TableInstance,
+    Header
+  >
+  reduceFooterProps: ReduceFooterProps<
+    FooterProps,
+    FooterProps,
+    TableInstance,
+    Header
+  >
+  // reduceRowProps: ReduceRowProps
+  // reduceCellProps: ReduceCellProps
 }
 
 export interface PluginPlugFn {
-  (...any: any): any
+  (...any: any): unknown
   after?: string[]
 }
 
 export type PlugName = keyof PluginPlugs
 
-export type PlugType = [PlugName, PluginPlugBuilder]
-
-export type PluginPlugBuilder = any
+export type PlugType = [PlugName, any]
 
 export interface RendererMeta {}
 
@@ -689,8 +828,8 @@ export interface ColumnResizing {
 }
 
 export interface ResizerProps {
-  onMouseDown?: any
-  onTouchStart?: any
+  onMouseDown?: unknown
+  onTouchStart?: unknown
   draggable?: boolean
   role?: 'separator' | string
 }
@@ -699,7 +838,7 @@ export interface ResizerProps {
 export type ColumnVisibility = Record<ColumnId, boolean>
 
 export interface ToggleAllColumnsVisibilityProps {
-  onChange?: any
+  onChange?: unknown
   title?: string
   checked?: boolean
   indeterminate?: boolean
@@ -707,7 +846,7 @@ export interface ToggleAllColumnsVisibilityProps {
 
 export interface ToggleColumnVisibilityProps {
   type: 'checkbox' | any
-  onChange?: any
+  onChange?: unknown
   title?: string
   checked?: boolean
 }
@@ -717,12 +856,12 @@ export interface ToggleColumnVisibilityProps {
 export type Expanded = Record<RowId, boolean>
 
 export interface ToggleAllRowsExpandedProps {
-  onClick?: any
+  onClick?: unknown
   title?: string
 }
 
 export interface ToggleExpandedProps {
-  onClick?: any
+  onClick?: unknown
   title?: string
 }
 
@@ -752,18 +891,18 @@ export type AggregateValueFn = (
 ) => any
 
 export interface ToggleGroupingProps {
-  onClick?: any
+  onClick?: unknown
   title?: string
 }
 
 // withRowSelection
 export interface ToggleAllRowsSelectedProps {
-  onClick?: any
+  onClick?: unknown
   title?: string
 }
 
 export interface ToggleAllPageRowsSelectedProps {
-  onClick?: any
+  onClick?: unknown
   title?: string
 }
 
@@ -791,6 +930,20 @@ export type SortFn = (
 ) => number
 
 export interface ToggleSortingProps {
-  onClick?: any
+  onClick?: unknown
   title?: string
 }
+
+// Utils
+
+export type Identity<T> = T
+export type IntersectionIdentity<T> = {} & { [k in keyof T]: T[k] }
+
+export type ComposeReducer = <TThrough, TMeta>(
+  fns: ((initial: TThrough, meta: TMeta) => TThrough)[]
+) => Reducer<TThrough, TMeta>
+
+export type Reducer<TThrough, TMeta> = (
+  initial: TThrough,
+  meta: TMeta
+) => TThrough

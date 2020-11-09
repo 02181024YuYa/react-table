@@ -1,5 +1,8 @@
 import React, {
+  ComponentProps,
   MouseEvent as ReactMouseEvent,
+  PropsWithoutRef,
+  PropsWithRef,
   TouchEvent as ReactTouchEvent,
 } from 'react'
 
@@ -102,8 +105,10 @@ const decorateHeader: DecorateHeader = (header, { instance }) => {
   header.getCanResize = () =>
     header?.column?.getCanResize ? header.column.getCanResize() : true
 
-  function isEvent<T>(e: any): e is T {
-    return (e as { type: string }).type === 'touchstart'
+  function isTouchStartEvent(
+    e: ReactTouchEvent | ReactMouseEvent
+  ): e is ReactTouchEvent {
+    return e.type === 'touchstart'
   }
 
   header.getResizerProps = (props = {}) => {
@@ -111,7 +116,7 @@ const decorateHeader: DecorateHeader = (header, { instance }) => {
       e: ReactMouseEvent | ReactTouchEvent,
       header: Header
     ) => {
-      if (isEvent<ReactTouchEvent>(e)) {
+      if (isTouchStartEvent(e)) {
         // lets not respond to multiple touches (e.g. 2 or 3 fingers)
         if (e.touches && e.touches.length > 1) {
           return
@@ -123,7 +128,7 @@ const decorateHeader: DecorateHeader = (header, { instance }) => {
         d.getWidth(),
       ])
 
-      const clientX = isEvent<ReactTouchEvent>(e)
+      const clientX = isTouchStartEvent(e)
         ? Math.round(e.touches[0].clientX)
         : e.clientX
 
@@ -193,7 +198,7 @@ const decorateHeader: DecorateHeader = (header, { instance }) => {
         ? { passive: false }
         : false
 
-      if (isEvent<ReactTouchEvent>(e)) {
+      if (isTouchStartEvent(e)) {
         document.addEventListener(
           'touchmove',
           touchEvents.moveHandler,

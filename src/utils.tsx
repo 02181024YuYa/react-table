@@ -10,16 +10,12 @@ import {
   TableState,
   Expanded,
   HeaderGroup,
+  ComposeReducer,
 } from './types'
 
-export function composeDecorator(fns: any[]) {
-  return (initial: any, meta: any) =>
-    fns.forEach(fn => fn(initial, meta), initial)
-}
-
-export function composeReducer(fns: any[]) {
-  return (initial: any, meta: any) =>
-    fns.reduce((reduced, fn) => fn(reduced, meta), initial)
+export const composeReducer: ComposeReducer = fns => {
+  return (initial, meta) =>
+    fns.reduce((reduced: any, fn: any) => fn(reduced, meta), initial)
 }
 
 export type DataUpdateFunction<TInput, TOutput> = (input: TInput) => TOutput
@@ -79,7 +75,7 @@ export function makeRenderer<T, U extends RendererMeta>(
   instance: T,
   meta: U = {} as U
 ) {
-  return (Comp: any, userProps = {}) => {
+  return (Comp: unknown, userProps: {}) => {
     return flexRender(Comp, {
       instance,
       ...meta,

@@ -25,6 +25,7 @@ const useReduceOptions: UseReduceOptions = options => {
     onPageSizeChange: React.useCallback(makeStateUpdater('pageSize'), []),
     onPageCountChange: React.useCallback(makeStateUpdater('pageCount'), []),
     autoResetPageIndex: true,
+    paginateExpandedRows: true,
     ...options,
     initialState: {
       pageIndex: 0,
